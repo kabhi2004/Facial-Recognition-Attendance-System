@@ -1,0 +1,75 @@
+/* * {
+  box-sizing: border-box;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.faculty-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+}
+
+.faculty-card {
+  background: #ffffff;
+  padding: 40px;
+  width: 420px;
+  border-radius: 18px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.faculty-card h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #1e293b;
+}
+
+.faculty-card p {
+  color: #64748b;
+  margin-bottom: 28px;
+  font-size: 15px;
+}
+
+.start-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+}
+
+.start-btn:active {
+  transform: translateY(0);
+} */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.stop-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stop-btn:hover {
+  background: #dc2626;
+}

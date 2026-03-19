@@ -1,0 +1,67 @@
+/* Page background */
+.subject-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f1f5f9, #eef2ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* Card */
+.subject-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Heading */
+.subject-card h2 {
+  text-align: center;
+  margin-bottom: 22px;
+  font-size: 24px;
+  color: #1e293b;
+}
+
+/* Inputs */
+.subject-card input {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 9px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.subject-card input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+/* Button */
+.subject-card button {
+  width: 100%;
+  padding: 13px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 9px;
+  background-color: #6366f1;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.subject-card button:hover {
+  background-color: #4f46e5;
+}
+
+.subject-card button:active {
+  transform: scale(0.97);
+}
