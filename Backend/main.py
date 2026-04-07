@@ -27,7 +27,9 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://facial-recognition.*\.vercel\.app",
+   allow_origins=[
+        "https://facial-recognition-attendance-syste-chi.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
