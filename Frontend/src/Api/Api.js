@@ -10,6 +10,18 @@ export async function loginUser(role, email, password) {
   return await res.json();
 }
 
+export async function faceLogin(blob, role) {
+  const formData = new FormData();
+  formData.append("file", blob);
+  formData.append("role", role);
+  
+  const res = await fetch(`${BASE_URL}/face-login`, {
+    method: "POST",
+    body: formData
+  });
+  return await res.json();
+}
+
 /* ---------- OTP ---------- */
 export async function verifyOtp(role, email, otp) {
   const res = await fetch(`${BASE_URL}/verify-otp`, {

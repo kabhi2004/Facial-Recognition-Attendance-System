@@ -16,12 +16,18 @@ export default function Otp() {
       return;
     }
 
+    const userData = {
+      role: state.role,
+      email: state.email,
+    };
+
+    if (data.subject_id) {
+      userData.subject_id = data.subject_id;
+    }
+
     localStorage.setItem(
       "user",
-      JSON.stringify({
-        role: state.role,
-        email: state.email,
-      })
+      JSON.stringify(userData)
     );
 
     if (state.role === "Admin") navigate("/admin/dashboard");

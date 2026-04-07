@@ -4,4 +4,4 @@ import "./index.css";
 
 const rootElement = document.getElementById("root");
 
-createRoot(rootElement).render(<App />);
+createRoot(rootElement).render(<App/>);

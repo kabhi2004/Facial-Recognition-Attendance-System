@@ -5,6 +5,7 @@ import Otp from "./Pages/Otp";
 import AdminDashboard from "./Pages/AdminDashboard";
 import FacultyDashboard from "./Pages/FacultyDashboard";
 import FacultyAttendance from "./Pages/FacultyAttendance";
+import StudentRecords from "./Pages/StudentRecords";
 import StudentDashboard from "./Pages/StudentDashboard";
 import AdminFaceRegister from "./Pages/AdminFaceRegister";
 import AddStudent from "./Pages/AddStudent";
@@ -59,6 +60,15 @@ export default function App() {
           element={
             <ProtectedRoute role="Faculty">
               <FacultyAttendance />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/faculty/records"
+          element={
+            <ProtectedRoute role="Faculty">
+              <StudentRecords />
             </ProtectedRoute>
           }
         />
