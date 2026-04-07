@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+uvicorn_crash.log
+.env
+.idea/
+.vscode/

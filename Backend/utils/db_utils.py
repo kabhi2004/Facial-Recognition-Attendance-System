@@ -4,32 +4,9 @@ import mysql.connector
 from datetime import date
 
 # ================= MYSQL CONFIG =================
-def get_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="pass123",
-        database="face_attendance"
-    )
-
-# ================= FACE DATA =================
-# def insert_face(person_type: str, person_id: int, samples: np.ndarray):
-#     blob = pickle.dumps(samples)
-
-#     conn = get_connection()
-#     cur = conn.cursor()
-
-#     cur.execute(
-#         """
-#         INSERT INTO faces (person_type, person_id, face_data)
-#         VALUES (%s, %s, %s)
-#         """,
-#         (person_type, person_id, blob)
-#     )
-
-#     conn.commit()
-#     cur.close()
-#     conn.close()
+import os
+from Database import get_connection
+#===============================================================================================
 def insert_face(person_type: str, person_id: int, samples: np.ndarray):
     conn = get_connection()
     cur = conn.cursor()
@@ -56,55 +33,16 @@ def insert_face(person_type: str, person_id: int, samples: np.ndarray):
 
 
 import pickle
-
-# def fetch_all_faces():
-#     """
-#     Returns: [(student_id, face_vector), ...]
-#     Uses ONLY student faces for training
-#     """
-#     conn = get_connection()
-#     cur = conn.cursor()
-
-#     cur.execute(
-#         """
-#         SELECT person_id, face_data
-#         FROM faces
-#         WHERE person_type = 'student'
-#         """
-#     )
-#     rows = cur.fetchall()
-
-#     cur.close()
-#     conn.close()
-
-#     data = []
-
-#     for person_id, blob in rows:
-#         try:
-#             samples = pickle.loads(blob)
-#             if samples is None:
-#                 continue
-
-#             for sample in samples:
-#                 data.append((int(person_id), sample))
-
-#         except Exception:
-#             continue
-
-#     return data
+#==================================================================================================#
 def fetch_all_faces():
     """
-    Returns: [(student_id, face_vector)]
-    ONLY faces whose person_id EXISTS in students table
+    Returns: [(person_type, person_id, face_vector)]
     """
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT f.person_id, f.face_data
-        FROM faces f
-        INNER JOIN students s ON s.id = f.person_id
-        WHERE f.person_type = 'student'
+        SELECT person_type, person_id, face_data FROM faces
     """)
 
     rows = cur.fetchall()
@@ -113,43 +51,15 @@ def fetch_all_faces():
 
     data = []
 
-    for student_id, blob in rows:
+    for person_type, person_id, blob in rows:
         samples = pickle.loads(blob)
         if samples is None:
             continue
 
         for sample in samples:
-            data.append((int(student_id), sample))
+            data.append((person_type, int(person_id), sample))
 
     return data
-
-
-
-# ================= ATTENDANCE =================
-# def insert_attendance(student_id: int, subject_id: int, status: str = "Present"):
-#     student_id = int(student_id)
-#     subject_id = int(subject_id)
-
-#     conn = get_connection()
-#     cur = conn.cursor()
-#     cur.execute("SELECT id FROM students WHERE id=%s", (student_id,))
-#     if not cur.fetchone():
-#         cur.close()
-#         conn.close()
-#         raise ValueError("Invalid student_id")
-
-#     cur.execute(
-#         """
-#         INSERT INTO attendance (student_id, subject_id, date, status)
-#         VALUES (%s, %s, %s, %s)
-#         ON DUPLICATE KEY UPDATE status = VALUES(status)
-#         """,
-#         (student_id, subject_id, date.today(), status)
-#     )
-
-#     conn.commit()
-#     cur.close()
-#     conn.close()
 
 
 def fetch_attendance_all():
@@ -175,13 +85,7 @@ def fetch_attendance_all():
         })
 
     return result
-
-
-
-
-#     conn.commit()
-#     cur.close()
-#     conn.close()
+# ===========================================================
 def insert_attendance(student_id: int, subject_id: int):
     conn = get_connection()
     cur = conn.cursor()
@@ -320,3 +224,27 @@ def insert_subject(subject_name, department, faculty_id):
     conn.commit()
     cur.close()
     conn.close()
+
+# ---------- FACULTY DASHBOARD ----------
+def fetch_all_students_records():
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("""
+        SELECT 
+            s.id, s.roll_no, s.name, s.department,
+            COUNT(a.id) as present_count
+        FROM students s
+        LEFT JOIN attendance a ON s.id = a.student_id
+        GROUP BY s.id, s.roll_no, s.name, s.department
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    TOTAL_CLASSES = 30  # configurable
+    for row in rows:
+        row['total_classes'] = TOTAL_CLASSES
+        row['absent_count'] = max(0, TOTAL_CLASSES - row['present_count'])
+        row['attendance_percentage'] = round((row['present_count'] / TOTAL_CLASSES) * 100, 1) if TOTAL_CLASSES > 0 else 0
+
+    return rows

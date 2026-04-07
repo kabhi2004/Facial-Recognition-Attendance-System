@@ -22,11 +22,19 @@ def generate_and_send_otp(receiver_email: str):
     msg["From"] = SENDER_EMAIL
     msg["To"] = receiver_email
 
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
-    server.login(SENDER_EMAIL, APP_PASSWORD)
-    server.send_message(msg)
-    server.quit()
+    print(f"\n======================================")
+    print(f"🔑 OTP FOR {receiver_email}: {otp}")
+    print(f"======================================\n")
+
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(SENDER_EMAIL, APP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        print("Continuing with login process, use the OTP printed above.")
 
 def verify_otp(receiver_email: str, user_otp: int):
     if receiver_email not in OTP_STORE:

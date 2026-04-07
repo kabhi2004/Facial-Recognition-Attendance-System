@@ -5,3 +5,4 @@ numpy
 scikit-learn
 python-multipart
 pydantic
+mysql-connector-python

@@ -1,3 +1,5 @@
+import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
 
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,15 +8,15 @@ from pydantic import BaseModel
 
 import cv2
 import numpy as np
-import os
 
 # ---------- IMPORT YOUR EXISTING MODULES ----------
-from utils.face_utils import detect_faces, preprocess_face
+from utils.face_utils import extract_face_embeddings
 from utils.db_utils import (
     insert_face,
     fetch_attendance_all,
     fetch_attendance_by_student_id,
-    fetch_attendance_summary_by_student_id
+    fetch_attendance_summary_by_student_id,
+    fetch_all_students_records
 )
 from AttendanceLogic import FaceRecognizer
 from Database import get_user
@@ -25,10 +27,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://facial-recognition.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,7 +35,19 @@ app.add_middleware(
 
 # ---------------- FACE MODEL INIT ----------------
 recognizer = FaceRecognizer()
-recognizer.train()
+
+@app.on_event("startup")
+def startup_event():
+    # 🌟 Initialize database tables automatically
+    from init_db import create_tables
+    try:
+        create_tables()
+    except Exception as e:
+        print(f"DEBUG: Failed to auto-create tables (might already exist or DB down): {e}")
+
+    global recognizer
+    recognizer.train()
+    print("DEBUG: Application successfully initialized model and database.")
 
 os.makedirs("attendance", exist_ok=True)
 
@@ -94,13 +105,106 @@ def verify_otp_api(data: OTPRequest):
     success, message = verify_otp(data.email, data.otp)
 
     if success:
-        return {
+        response = {
             "success": True,
             "role": data.role,
             "message": "Login successful"
         }
+        if data.role == "Faculty":
+            from Database import get_connection
+            user = get_user("Faculty", data.email)
+            if user:
+                conn = get_connection()
+                cur = conn.cursor(dictionary=True)
+                cur.execute("SELECT id FROM subjects WHERE faculty_id = %s LIMIT 1", (user["id"],))
+                sub = cur.fetchone()
+                cur.close()
+                conn.close()
+                if sub:
+                    response["subject_id"] = sub["id"]
+        return response
 
     return {"success": False, "message": message}
+
+# =================================================
+# 😁 FACE LOGIN API 
+# =================================================
+from Database import get_user_by_id
+
+@app.post("/face-login")
+async def face_login(
+    file: UploadFile = File(...),
+    role: str = Form(...)
+):
+    img_bytes = await file.read()
+    np_img = np.frombuffer(img_bytes, np.uint8)
+    frame = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+
+    if frame is None:
+        return {"success": False, "message": "Invalid image format"}
+
+    embeddings = extract_face_embeddings(frame)
+
+    if len(embeddings) == 0:
+        return {"success": False, "message": "No face detected in feed (or occlusion too high)"}
+
+    face_vector = np.array(embeddings[0]["embedding"])
+
+    person_data, confidence = recognizer.predict(face_vector)
+
+    if person_data is None:
+        return {"success": False, "message": "Face not recognized"}
+
+    role_map = {
+        "student": "Student",
+        "faculty": "Faculty",
+        "admin": "Admin"
+    }
+    
+    recognized_role = role_map.get(person_data["type"], "Student")
+
+    if recognized_role.lower() != role.lower():
+        return {"success": False, "message": f"Face matched a {recognized_role}, but you selected {role}."}
+
+    user_id = person_data["id"]
+
+    user = get_user_by_id(recognized_role, user_id)
+    if not user:
+        return {"success": False, "message": "Identified user not found in database"}
+
+    response = {
+        "success": True,
+        "message": f"Welcome back, {user['name']}"
+    }
+
+    if recognized_role == "Student":
+        response.update({
+            "role": "Student",
+            "student_id": user_id,
+            "name": user["name"],
+            "email": user["email"]
+        })
+    elif recognized_role == "Faculty":
+        response.update({
+            "role": "Faculty",
+            "email": user["email"]
+        })
+        from Database import get_connection
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT id FROM subjects WHERE faculty_id = %s LIMIT 1", (user["id"],))
+        sub = cur.fetchone()
+        cur.close()
+        conn.close()
+        if sub:
+            response["subject_id"] = sub["id"]
+    elif recognized_role == "Admin":
+         response.update({
+             "role": "Admin",
+             "email": user["email"] 
+         })
+
+    return response
 
 # =================================================
 # 📸 FACE REGISTRATION
@@ -118,17 +222,14 @@ async def admin_register_face(
     if frame is None:
         return {"success": False, "message": "Invalid image"}
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = detect_faces(gray)
+    embeddings = extract_face_embeddings(frame)
 
-    # ✅ FIX HERE
-    if faces is None or len(faces) == 0:
+    if len(embeddings) == 0:
         return {"success": False, "message": "No face detected"}
 
     samples = []
-    for (x, y, w, h) in faces:
-        crop = frame[y:y+h, x:x+w]
-        samples.append(preprocess_face(crop))
+    for emb in embeddings:
+        samples.append(emb["embedding"])
 
     insert_face(person_type, int(person_id), np.array(samples))
     recognizer.train()
@@ -153,25 +254,32 @@ async def recognize(
     np_img = np.frombuffer(img_bytes, np.uint8)
     frame = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = detect_faces(gray)
+    embeddings = extract_face_embeddings(frame)
+    print(f"DEBUG: Found {len(embeddings)} faces in frame")
 
     results = []
 
-    for (x, y, w, h) in faces:
-        crop = frame[y:y+h, x:x+w]
-        face_vector = preprocess_face(crop)
+    for emb in embeddings:
+        face_vector = np.array(emb["embedding"])
+        person_data, confidence = recognizer.predict(face_vector)
+        print(f"DEBUG: predict returned {person_data} with confidence {confidence}")
 
-        student_id, confidence = recognizer.predict(face_vector)
-
-        if student_id is None:
+        if person_data is None or person_data["type"].lower() != "student":
+            print("DEBUG: Ignored face because it's None or not a student")
             continue
+            
+        student_id = person_data["id"]
 
-        # ✅ Mark attendance
-        attendance = recognizer.mark_attendance(
-            student_id=student_id,
-            subject_id=subject_id
-        )
+        try:
+            # ✅ Mark attendance
+            attendance = recognizer.mark_attendance(
+                student_id=student_id,
+                subject_id=subject_id
+            )
+            print(f"DEBUG: Attendance marked for {student_id}")
+        except Exception as e:
+            print(f"DEBUG: Failed to mark attendance: {e}")
+            continue
 
         # ✅ Fetch student name
         student_name = get_student_name_by_id(student_id)
@@ -183,6 +291,7 @@ async def recognize(
             "timestamp": attendance["time"]
         })
 
+    print(f"DEBUG: Returning recognized results: {results}")
     return {"recognized": results}
 
 
@@ -243,6 +352,11 @@ def student_attendance(student_id: int):
 @app.get("/student/{student_id}/attendance-summary")
 def student_attendance_summary(student_id: int):
     return fetch_attendance_summary_by_student_id(student_id)
+
+@app.get("/faculty/student-records")
+def get_faculty_student_records():
+    rows = fetch_all_students_records()
+    return JSONResponse({"records": rows})
 
 
 

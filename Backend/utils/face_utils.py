@@ -1,30 +1,49 @@
 import cv2
 import numpy as np
-import os
+from deepface import DeepFace
 
-# Absolute path (VERY IMPORTANT for FastAPI / uvicorn)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CASCADE_PATH = os.path.join(BASE_DIR, "data", "haarcascade_frontalface_default.xml")
+# Extract robust embeddings from an image using FaceNet
+# Facial area is returned so we know where the face was found.
+def extract_face_embeddings(frame):
+    """
+    Takes a BGR frame (from OpenCV) and extracts facial embeddings using DeepFace.
+    Returns: a list of dictionaries where each dict contains:
+        - embedding: A feature vector representation (e.g. 512 dimensions for Facenet512)
+        - facial_area: {x, y, w, h}
+    """
+    try:
+        # We use Facenet which balances high accuracy and moderate speed. 
+        # retinaface as detector is the most accurate for masks, but OpenCV DNN is faster
+        # Using detector_backend = 'opencv' (default) is fast, but 'retinaface' is better for occlusions.
+        # Let's stick with opencv detector but Facenet embedding for occlusion robustness.
+        
+        results = DeepFace.represent(
+            img_path=frame, 
+            model_name="Facenet", 
+            detector_backend="mtcnn", 
+            enforce_detection=True 
+        )
+    except Exception as e:
+        print(f"DEBUG(face_utils): extract_face_embeddings failed: {e}")
+        return []
+        
+    return results
 
-cascade = cv2.CascadeClassifier(CASCADE_PATH)
-
-if cascade.empty():
-    raise FileNotFoundError(f"Haarcascade not found at {CASCADE_PATH}")
-
-def detect_faces(gray_frame, scaleFactor=1.3, minNeighbors=5, minSize=(50, 50)):
-    return cascade.detectMultiScale(
-        gray_frame,
-        scaleFactor=scaleFactor,
-        minNeighbors=minNeighbors,
-        flags=cv2.CASCADE_SCALE_IMAGE,   # ✅ REQUIRED
-        minSize=minSize                 # ✅ keyword argument
-    )
-
-def preprocess_face(bgr_face, size=(80, 80)):
-      gray = cv2.cvtColor(bgr_face, cv2.COLOR_BGR2GRAY)
-      resized = cv2.resize(gray, size)
-      return resized.flatten().astype(np.float32)
- 
-def preprocess_face_from_gray(gray_face, size=(50, 50)):
-      resized = cv2.resize(gray_face, size)
-      return resized.flatten().astype(np.float32)
+def detect_faces(frame_bgr):
+    """
+    Fallback or alternative just for drawing rects if needed
+    """
+    try:
+        faces = DeepFace.extract_faces(
+            img_path=frame_bgr, 
+            detector_backend="opencv", 
+            enforce_detection=False
+        )
+        boxes = []
+        for face in faces:
+            a = face.get("facial_area")
+            if a and face.get("confidence", 1.0) > 0.8:
+                 boxes.append((a["x"], a["y"], a["w"], a["h"]))
+        return boxes
+    except:
+        return []
