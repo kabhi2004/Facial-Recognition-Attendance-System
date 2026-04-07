@@ -83,7 +83,7 @@ export default function Login() {
       videoRef.current.srcObject = s;
       setStream(s);
     } catch (err) {
-      setMessage("❌ Camera access denied.");
+      alert(`❌ Camera access denied or not supported: ${err.message}`);
       setUseCamera(false);
     }
   }

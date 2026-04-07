@@ -181,6 +181,7 @@ function RegisterFace() {
       />
 
       <video
+        playsInline
         ref={videoRef}
         autoPlay
         className="mx-auto rounded-lg border w-full max-w-sm"
