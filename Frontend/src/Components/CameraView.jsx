@@ -8,7 +8,7 @@ function CameraView() {
   const [result, setResult] = useState("No face detected");
 
   const startCamera = async () => {
-    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
     videoRef.current.srcObject = mediaStream;
     setStream(mediaStream);
   };
@@ -71,7 +71,7 @@ function CameraView() {
     <div className="card">
       <h2>Live Camera</h2>
 
-      <video ref={videoRef} autoPlay className="camera" />
+      <video playsInline ref={videoRef} autoPlay className="camera" />
       <canvas ref={canvasRef} hidden />
 
       <div className="btn-group">

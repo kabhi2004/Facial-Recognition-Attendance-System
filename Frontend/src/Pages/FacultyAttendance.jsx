@@ -20,7 +20,7 @@ export default function FacultyAttendance() {
   }, []);
 
   function startCamera() {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(stream => {
       streamRef.current = stream;
       if(videoRef.current) videoRef.current.srcObject = stream;
     });
@@ -112,7 +112,7 @@ export default function FacultyAttendance() {
         <div className="attendance-content">
           <div className="camera-section glass-effect">
             <div className={`camera-box ${running ? 'scanning' : ''}`}>
-               <video ref={videoRef} autoPlay muted playsInline />
+               <video playsInline ref={videoRef} autoPlay muted playsInline />
                <div className="camera-overlay">
                   {running && <div className="scanning-bar"></div>}
                   <div className="live-badge">

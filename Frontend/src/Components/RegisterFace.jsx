@@ -11,7 +11,7 @@
 
 //   // Start camera
 //   const startCamera = async () => {
-//     const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+//     const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
 //     videoRef.current.srcObject = mediaStream;
 //     setStream(mediaStream);
 //   };
@@ -121,7 +121,7 @@ function RegisterFace() {
 
   // 🎥 Start camera
   const startCamera = async () => {
-    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
     videoRef.current.srcObject = mediaStream;
     setStream(mediaStream);
   };

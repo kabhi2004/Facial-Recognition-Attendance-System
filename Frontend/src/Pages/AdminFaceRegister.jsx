@@ -13,7 +13,7 @@ export default function AdminFaceRegister() {
   const [stream, setStream] = useState(null);
 
   async function startCamera() {
-    const s = await navigator.mediaDevices.getUserMedia({ video: true });
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
     videoRef.current.srcObject = s;
     setStream(s);
   }
@@ -84,7 +84,7 @@ export default function AdminFaceRegister() {
         </div>
 
         <div className="afr-camera-box">
-          <video ref={videoRef} autoPlay muted />
+          <video playsInline ref={videoRef} autoPlay muted />
           <span className={stream ? "live-dot active" : "live-dot"} />
         </div>
 

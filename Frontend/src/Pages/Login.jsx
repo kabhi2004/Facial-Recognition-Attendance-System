@@ -79,7 +79,7 @@ export default function Login() {
     setUseCamera(true);
     setMessage("");
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: true });
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       videoRef.current.srcObject = s;
       setStream(s);
     } catch (err) {
@@ -174,7 +174,7 @@ export default function Login() {
           </form>
         ) : (
           <div className="face-login-box">
-             <video ref={videoRef} autoPlay muted className="face-video" />
+             <video playsInline ref={videoRef} autoPlay muted className="face-video" />
              <canvas ref={canvasRef} hidden />
              <p className="message">{message}</p>
              <div className="btn-row">
