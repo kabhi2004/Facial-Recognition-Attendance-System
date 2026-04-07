@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiCamera, FiVideoOff, FiPlayCircle, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
 import "./FacultyAttendance.css";
 
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "https://facial-recognition-attendance-system-production.up.railway.app";
 
 export default function FacultyAttendance() {
   const navigate = useNavigate();

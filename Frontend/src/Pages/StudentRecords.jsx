@@ -15,7 +15,7 @@ export default function StudentRecords() {
 
   const fetchRecords = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/faculty/student-records");
+      const response = await axios.get("https://facial-recognition-attendance-system-production.up.railway.app/faculty/student-records");
       setRecords(response.data.records);
     } catch (error) {
       console.error("Failed to fetch student records:", error);
