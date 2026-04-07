@@ -9,31 +9,18 @@ SENDER_EMAIL = "abhishek250304@gmail.com"
 APP_PASSWORD = "pxiddchoboxugula"   # Gmail App Password
 
 def generate_and_send_otp(receiver_email: str):
-    otp = random.randint(100000, 999999)
+    # 🔥 DUMMY DEMO OTP 🔥
+    otp = 123456
 
     OTP_STORE[receiver_email] = {
         "otp": otp,
         "time": time.time()
     }
 
-    msg = EmailMessage()
-    msg.set_content(f"Your OTP is {otp}. Valid for 2 minutes.")
-    msg["Subject"] = "2-Step Authentication OTP"
-    msg["From"] = SENDER_EMAIL
-    msg["To"] = receiver_email
-
     print(f"\n======================================")
-    print(f"🔑 OTP FOR {receiver_email}: {otp}")
+    print(f"🔑 DUMMY DEMO OTP FOR {receiver_email}: {otp}")
     print(f"======================================\n")
-
-    try:
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-        server.login(SENDER_EMAIL, APP_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-    except Exception as e:
-        print(f"Failed to send email: {e}")
-        print("Continuing with login process, use the OTP printed above.")
+    print("Demo mode: Email sending disabled. Please use 123456 as OTP.")
 
 def verify_otp(receiver_email: str, user_otp: int):
     if receiver_email not in OTP_STORE:
