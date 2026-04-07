@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "facial-recognition-attendance-system-production.up.railway.app";
 
 /* ---------- LOGIN ---------- */
 export async function loginUser(role, email, password) {
