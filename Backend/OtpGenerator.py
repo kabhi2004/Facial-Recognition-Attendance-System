@@ -27,8 +27,7 @@ def generate_and_send_otp(receiver_email: str):
     print(f"======================================\n")
 
     try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.login(SENDER_EMAIL, APP_PASSWORD)
         server.send_message(msg)
         server.quit()
