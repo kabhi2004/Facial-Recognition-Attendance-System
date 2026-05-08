@@ -39,7 +39,7 @@
 import { useState } from "react";
 import "./AddSubject.css";
 
-const BASE_URL = "https://facial-recognition-attendance-system-production.up.railway.app";
+const BASE_URL = "http://localhost:8000";
 
 export default function AddSubject() {
   const [form, setForm] = useState({

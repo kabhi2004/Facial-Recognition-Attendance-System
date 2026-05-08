@@ -153,7 +153,7 @@ function RegisterFace() {
 
       try {
         const res = await axios.post(
-          "https://facial-recognition-attendance-system-production.up.railway.app/register-face",
+          "http://localhost:8000/register-face",
           formData
         );
 

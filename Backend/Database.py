@@ -1,13 +1,16 @@
 import mysql.connector
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_connection():
     return mysql.connector.connect(
-        host=os.environ["MYSQLHOST"],
-        user=os.environ["MYSQLUSER"],
-        password=os.environ["MYSQLPASSWORD"],
-        database=os.environ["MYSQLDATABASE"],
-        port=int(os.environ["MYSQLPORT"]),
+        host=os.getenv("MYSQLHOST", "localhost"),
+        user=os.getenv("MYSQLUSER", "root"),
+        password=os.getenv("MYSQLPASSWORD", ""),
+        database=os.getenv("MYSQLDATABASE", "attendance_db"),
+        port=int(os.getenv("MYSQLPORT", "3306")),
         use_pure=True
     )
 def get_user(role: str, email: str):

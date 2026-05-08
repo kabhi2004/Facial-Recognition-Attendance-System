@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiCamera, FiVideoOff, FiPlayCircle, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
 import "./FacultyAttendance.css";
 
-const BASE_URL = "https://facial-recognition-attendance-system-production.up.railway.app";
+const BASE_URL = "http://localhost:8000";
 
 export default function FacultyAttendance() {
   const navigate = useNavigate();
@@ -112,7 +112,7 @@ export default function FacultyAttendance() {
         <div className="attendance-content">
           <div className="camera-section glass-effect">
             <div className={`camera-box ${running ? 'scanning' : ''}`}>
-               <video playsInline ref={videoRef} autoPlay muted playsInline />
+               <video playsInline ref={videoRef} autoPlay muted />
                <div className="camera-overlay">
                   {running && <div className="scanning-bar"></div>}
                   <div className="live-badge">

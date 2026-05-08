@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "../Style/AddFaculty.css";
 
-const BASE_URL = "https://facial-recognition-attendance-system-production.up.railway.app";
+const BASE_URL = "http://localhost:8000";
 
 export default function AddFaculty() {
   const [form, setForm] = useState({

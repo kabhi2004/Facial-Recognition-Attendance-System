@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import "./AdminFaceRegister.css";
 
-const BASE_URL = "https://facial-recognition-attendance-system-production.up.railway.app";
+const BASE_URL = "http://localhost:8000";
 
 export default function AdminFaceRegister() {
   const videoRef = useRef(null);
