@@ -117,7 +117,7 @@ function RegisterFace() {
   const canvasRef = useRef(null);
 
   const [stream, setStream] = useState(null);
-  const [studentId, setStudentId] = useState("");
+  const [rollNo, setRollNo] = useState("");
   const [message, setMessage] = useState("");
 
   // 🎥 Start camera
@@ -135,8 +135,8 @@ function RegisterFace() {
 
   // 📸 Capture & send to backend
   const registerFace = async () => {
-    if (!studentId) {
-      setMessage("❌ Please enter Student ID");
+    if (!rollNo) {
+      setMessage("❌ Please enter Student Roll Number");
       return;
     }
 
@@ -149,22 +149,23 @@ function RegisterFace() {
 
     canvas.toBlob(async (blob) => {
       const formData = new FormData();
-      formData.append("student_id", studentId);
+      formData.append("person_type", "student");
+      formData.append("person_id", rollNo);
       formData.append("file", blob, "face.jpg");
 
       try {
         const res = await axios.post(
-          `${BASE_URL}/register-face`,
+          `${BASE_URL}/admin/register-face`,
           formData
         );
 
-        if (res.data.status === "success") {
-          setMessage(`✅ Face registered for Student ID ${studentId}`);
+        if (res.data.success) {
+          setMessage(`✅ Face registered for Student Roll No. ${rollNo}`);
         } else {
-          setMessage("❌ No face detected");
+          setMessage("❌ No face detected: " + (res.data.message || ""));
         }
       } catch (err) {
-        setMessage("❌ Error registering face (check student ID)");
+        setMessage("❌ Error registering face (check student roll number)");
       }
     }, "image/jpeg");
   };
@@ -174,10 +175,10 @@ function RegisterFace() {
       <h2 className="text-xl font-semibold mb-4">Register Face</h2>
 
       <input
-        type="number"
-        placeholder="Enter Student ID"
-        value={studentId}
-        onChange={(e) => setStudentId(e.target.value)}
+        type="text"
+        placeholder="Enter Student Roll Number"
+        value={rollNo}
+        onChange={(e) => setRollNo(e.target.value)}
         className="border p-2 rounded w-full mb-3"
       />
 
@@ -220,3 +221,4 @@ function RegisterFace() {
 }
 
 export default RegisterFace;
+
