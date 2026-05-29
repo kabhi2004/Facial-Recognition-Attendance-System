@@ -235,14 +235,14 @@ def insert_student(roll_no, name, email, password, department):
 
 
 # ---------- FACULTY ----------
-def insert_faculty(name, email, password, department, subject_id):
+def insert_faculty(id, name, email, password, department, subject_id):
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO faculty (name, email, password, department, subject_id)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (name, email, password, department, subject_id))
+        INSERT INTO faculty (id, name, email, password, department, subject_id)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """, (id, name, email, password, department, subject_id))
 
     conn.commit()
     cur.close()

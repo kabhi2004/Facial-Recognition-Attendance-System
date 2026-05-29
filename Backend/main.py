@@ -502,6 +502,7 @@ class Student(BaseModel):
     department: str
 
 class Faculty(BaseModel):
+    id: int
     name: str
     email: str
     password: str

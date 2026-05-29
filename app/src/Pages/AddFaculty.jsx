@@ -7,6 +7,7 @@ import { FaUser, FaEnvelope, FaLock, FaBuilding, FaBook, FaArrowLeft, FaPlus } f
 export default function AddFaculty() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
+    id: "",
     name: "",
     email: "",
     password: "",
@@ -35,7 +36,7 @@ export default function AddFaculty() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password || !form.department || !form.subject_id) {
+    if (!form.id || !form.name || !form.email || !form.password || !form.department || !form.subject_id) {
       setMessage({ text: "Please fill in all the details", type: "error" });
       return;
     }
@@ -44,11 +45,13 @@ export default function AddFaculty() {
     try {
       const data = await addFaculty({
         ...form,
+        id: Number(form.id),
         subject_id: Number(form.subject_id)
       });
       if (data.success) {
         setMessage({ text: "Faculty registered successfully!", type: "success" });
         setForm({
+          id: "",
           name: "",
           email: "",
           password: "",
@@ -89,6 +92,21 @@ export default function AddFaculty() {
         )}
 
         <form onSubmit={submit} className="admin-interactive-form">
+          <div className="input-field-group">
+            <label>Faculty ID (Number)</label>
+            <div className="input-wrapper">
+              <FaUser className="input-field-icon" />
+              <input
+                type="number"
+                name="id"
+                placeholder="e.g. 101"
+                value={form.id}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
           <div className="input-field-group">
             <label>Full Name</label>
             <div className="input-wrapper">
