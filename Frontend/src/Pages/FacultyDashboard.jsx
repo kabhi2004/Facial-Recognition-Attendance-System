@@ -85,6 +85,22 @@ export default function FacultyDashboard() {
                 <FiChevronRight size={24} />
               </div>
             </div>
+
+            <div 
+              className="action-card secondary-action glass-effect"
+              onClick={() => navigate("/faculty/leaves")}
+            >
+              <div className="card-icon-wrapper glow" style={{boxShadow: '0 0 20px rgba(250, 204, 21, 0.4)'}}>
+                <FiClock size={32} color="#facc15" />
+              </div>
+              <div className="card-content">
+                <h3>Leave Approvals</h3>
+                <p>Review and approve student leave requests.</p>
+              </div>
+              <div className="card-arrow">
+                <FiChevronRight size={24} />
+              </div>
+            </div>
           </div>
         </section>
 

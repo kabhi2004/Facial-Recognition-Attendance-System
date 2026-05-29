@@ -11,6 +11,7 @@ import AdminFaceRegister from "./Pages/AdminFaceRegister";
 import AddStudent from "./Pages/AddStudent";
 import AddFaculty from "./Pages/AddFaculty";
 import AddSubject from "./Pages/AddSubject";
+import LeaveApprovals from "./Pages/LeaveApprovals";
 
 
 import ProtectedRoute from "./Components/ProtectedRoute";
@@ -69,6 +70,15 @@ export default function App() {
           element={
             <ProtectedRoute role="Faculty">
               <StudentRecords />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/faculty/leaves"
+          element={
+            <ProtectedRoute role="Faculty">
+              <LeaveApprovals />
             </ProtectedRoute>
           }
         />

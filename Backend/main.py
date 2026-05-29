@@ -356,10 +356,40 @@ def student_attendance(student_id: int):
 def student_attendance_summary(student_id: int):
     return fetch_attendance_summary_by_student_id(student_id)
 
+import io
+import csv
+from fastapi.responses import StreamingResponse
+
 @app.get("/faculty/student-records")
 def get_faculty_student_records():
     rows = fetch_all_students_records()
     return JSONResponse({"records": rows})
+
+@app.get("/faculty/export-attendance")
+def export_attendance():
+    rows = fetch_all_students_records()
+    stream = io.StringIO()
+    writer = csv.writer(stream)
+    
+    # Write CSV Header
+    writer.writerow(["Roll No", "Name", "Department", "Present Count", "Absent Count", "Total Classes", "Attendance (%)"])
+    
+    # Write Data
+    for row in rows:
+        writer.writerow([
+            row.get("roll_no", ""),
+            row.get("name", ""),
+            row.get("department", ""),
+            row.get("present_count", 0),
+            row.get("absent_count", 0),
+            row.get("total_classes", 30),
+            f"{row.get('attendance_percentage', 0)}%"
+        ])
+    
+    stream.seek(0)
+    response = StreamingResponse(iter([stream.getvalue()]), media_type="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=attendance_report.csv"
+    return response
 
 
 
@@ -415,3 +445,47 @@ def add_faculty(data: Faculty):
 def add_subject(data: Subject):
     insert_subject(**data.model_dump())
     return {"success": True}
+
+# =================================================
+# 📝 LEAVE MANAGEMENT APIs
+# =================================================
+from utils.db_utils import apply_leave, fetch_pending_leaves, update_leave_status, get_student_subjects
+
+@app.get("/student/{student_id}/subjects")
+def api_get_student_subjects(student_id: int):
+    subjects = get_student_subjects(student_id)
+    return {"success": True, "subjects": subjects}
+
+class LeaveApplication(BaseModel):
+    student_id: int
+    subject_id: int
+    date: str
+    reason: str
+
+@app.post("/student/apply-leave")
+def api_apply_leave(data: LeaveApplication):
+    apply_leave(data.student_id, data.subject_id, data.date, data.reason)
+    return {"success": True, "message": "Leave application submitted successfully"}
+
+@app.get("/faculty/{faculty_id}/pending-leaves")
+def api_pending_leaves(faculty_id: int):
+    leaves = fetch_pending_leaves(faculty_id)
+    return {"success": True, "leaves": leaves}
+
+class LeaveStatusUpdate(BaseModel):
+    leave_id: int
+    status: str
+
+@app.post("/faculty/update-leave")
+def api_update_leave(data: LeaveStatusUpdate):
+    if data.status not in ["Approved", "Rejected"]:
+        return {"success": False, "message": "Invalid status"}
+    update_leave_status(data.leave_id, data.status)
+    return {"success": True, "message": f"Leave {data.status.lower()} successfully"}
+
+
+@app.get("/student/{student_id}/leaves")
+def api_get_student_leaves(student_id: int):
+    from utils.db_utils import fetch_student_leaves
+    leaves = fetch_student_leaves(student_id)
+    return {"success": True, "leaves": leaves}

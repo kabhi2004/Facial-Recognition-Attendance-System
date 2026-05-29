@@ -73,3 +73,37 @@ export async function addSubject(data) {
   });
   return res.json();
 }
+
+/* ---------- LEAVES ---------- */
+export async function getStudentSubjects(student_id) {
+  const res = await fetch(`${BASE_URL}/student/${student_id}/subjects`);
+  return res.json();
+}
+
+export async function applyLeave(data) {
+  const res = await fetch(`${BASE_URL}/student/apply-leave`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}
+
+export async function getPendingLeaves(faculty_id) {
+  const res = await fetch(`${BASE_URL}/faculty/${faculty_id}/pending-leaves`);
+  return res.json();
+}
+
+export async function updateLeaveStatus(data) {
+  const res = await fetch(`${BASE_URL}/faculty/update-leave`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}
+
+export async function getMyLeaves(student_id) {
+  const res = await fetch(`${BASE_URL}/student/${student_id}/leaves`);
+  return res.json();
+}
