@@ -1,0 +1,278 @@
+/* --- BIOMETRIC CARD CONTAINER CONFIG --- */
+.biometric-card-container {
+  max-width: 540px !important;
+}
+
+.biometric-icon-wrapper {
+  background: rgba(99, 102, 241, 0.1) !important;
+  border-color: rgba(99, 102, 241, 0.2) !important;
+  color: #818cf8 !important;
+}
+
+/* Side-by-Side Form Grid */
+.afr-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.afr-select {
+  padding-left: 16px !important; /* adjust for select field lack of icon */
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px top 50%;
+}
+
+/* --- HIGH-TECH BIOMETRIC CAMERA VIEWPORT --- */
+.afr-camera-viewport {
+  width: 100%;
+  margin-bottom: 28px;
+}
+
+.camera-frame-scanner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #090d16;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+}
+
+.face-video-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scaleX(-1); /* mirror feed */
+  transition: opacity 0.5s ease;
+}
+
+.face-video-feed.active {
+  opacity: 1;
+}
+
+/* Camera offline screen layout */
+.camera-fallback-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  color: #64748b;
+  z-index: 5;
+}
+
+.fallback-camera-icon {
+  font-size: 40px;
+  color: #475569;
+  animation: float 3s infinite ease-in-out;
+}
+
+.camera-fallback-screen p {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Biometric HUD Overlay elements */
+.biometric-hud-overlay {
+  position: absolute;
+  inset: 20px;
+  pointer-events: none;
+  z-index: 8;
+}
+
+/* Border HUD corners */
+.hud-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: #6366f1;
+  border-style: solid;
+  opacity: 0.8;
+}
+
+.hud-corner.top-left {
+  top: 0;
+  left: 0;
+  border-width: 2.5px 0 0 2.5px;
+  border-top-left-radius: 8px;
+}
+
+.hud-corner.top-right {
+  top: 0;
+  right: 0;
+  border-width: 2.5px 2.5px 0 0;
+  border-top-right-radius: 8px;
+}
+
+.hud-corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 2.5px 2.5px;
+  border-bottom-left-radius: 8px;
+}
+
+.hud-corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  border-width: 0 2.5px 2.5px 0;
+  border-bottom-right-radius: 8px;
+}
+
+/* Scanning Reticle */
+.hud-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  border: 1.5px dashed rgba(99, 102, 241, 0.4);
+  border-radius: 50%;
+  animation: spin 16s linear infinite;
+}
+
+.hud-reticle::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border: 1.5px solid rgba(99, 102, 241, 0.15);
+  border-radius: 50%;
+}
+
+/* Scanner active status badge overlay */
+.camera-status-tag {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  padding: 6px 12px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 9;
+}
+
+.live-camera-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: pulse-ring 1.8s infinite ease-in-out;
+}
+
+/* --- BUTTONS ACTION PANEL --- */
+.afr-action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.afr-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.start-stream-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.start-stream-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+}
+
+.register-biometric-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.register-biometric-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+}
+
+.register-biometric-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stop-stream-btn {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.stop-stream-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Banner informational style */
+.form-feedback-banner.info {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1.5px solid rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .afr-form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
