@@ -261,7 +261,10 @@
   font-size: 32px;
   font-weight: 800;
   margin: 0;
-  color: #0f172a;
+  color: #0f172a !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .stat-icon-wrapper {
