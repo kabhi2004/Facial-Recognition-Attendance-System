@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiCamera, FiVideoOff, FiPlayCircle, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
 import "./FacultyAttendance.css";
+import { BASE_URL } from "../Api/Api";
 
-const BASE_URL = "http://localhost:8000";
 
 export default function FacultyAttendance() {
   const navigate = useNavigate();

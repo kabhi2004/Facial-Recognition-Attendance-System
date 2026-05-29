@@ -27,9 +27,12 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-   allow_origins=[
+    allow_origins=[
         "https://facial-recognition-attendance-syste-chi.vercel.app",
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "http://localhost",
+        "capacitor://localhost",
+        "http://127.0.0.1:5173"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -130,6 +133,10 @@ def verify_otp_api(data: OTPRequest):
                 conn.close()
                 if sub:
                     response["subject_id"] = sub["id"]
+        elif data.role == "Admin":
+            user = get_user("Admin", data.email)
+            if user:
+                response["name"] = user["name"]
         return response
 
     return {"success": False, "message": message}

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiCamera, FiLogOut, FiUsers, FiClock, FiSettings, FiChevronRight, FiUser, FiBook, FiMail } from "react-icons/fi";
-import { getFacultyStats } from "../Api/Api";
+import { getFacultyStats, BASE_URL } from "../Api/Api";
 import "./FacultyDashboard.css";
 
 export default function FacultyDashboard() {
@@ -52,7 +52,7 @@ export default function FacultyDashboard() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://localhost:8000/photo/upload", {
+      const res = await fetch(`${BASE_URL}/photo/upload`, {
         method: "POST",
         body: formData,
       });
@@ -108,7 +108,7 @@ export default function FacultyDashboard() {
           >
             {!imgError ? (
               <img
-                src={`http://localhost:8000/photo/faculty/${user?.faculty_id}?t=${cacheBust}`}
+                src={`${BASE_URL}/photo/faculty/${user?.faculty_id}?t=${cacheBust}`}
                 alt={user?.name}
                 className="student-profile-photo"
                 onError={() => setImgError(true)}

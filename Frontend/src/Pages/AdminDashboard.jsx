@@ -99,9 +99,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className="sidebar-profile">
-          <div className="profile-avatar">A</div>
+          <div className="profile-avatar">{adminUser.name ? adminUser.name.charAt(0).toUpperCase() : "A"}</div>
           <div className="profile-info">
-            <h3>Super Admin</h3>
+            <h3>{adminUser.name || "Super Admin"}</h3>
             <p>{adminUser.email}</p>
           </div>
         </div>

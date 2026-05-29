@@ -92,7 +92,7 @@
 }
 
 .profile-title-row h1 {
-  font-size: 26px;
+  font-size: clamp(20px, 4vw, 26px);
   font-weight: 700;
   color: #1e293b;
   margin: 0;
@@ -506,9 +506,21 @@ tr:hover {
     padding: 24px;
   }
   
+  .profile-title-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
   .profile-meta-grid {
     justify-content: center;
     gap: 12px;
+  }
+  
+  .profile-action-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
   
   .dashboard-main-grid {
@@ -523,6 +535,14 @@ tr:hover {
   
   .dashboard-container {
     padding: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-meta-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
   }
 }
 

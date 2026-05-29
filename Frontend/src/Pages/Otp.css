@@ -115,16 +115,19 @@
 /* Inputs styling */
 .otp-inputs-row {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: center;
+  gap: clamp(6px, 2.5vw, 12px);
   margin-bottom: 28px;
   direction: ltr;
+  width: 100%;
 }
 
 .otp-digit-field {
-  width: 48px;
-  height: 56px;
-  font-size: 22px;
+  flex: 1;
+  max-width: 48px;
+  height: auto;
+  aspect-ratio: 1 / 1.15;
+  font-size: clamp(16px, 4.5vw, 22px);
   font-weight: 700;
   text-align: center;
   background: rgba(17, 24, 39, 0.4);
@@ -133,6 +136,7 @@
   color: #ffffff;
   outline: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 0;
 }
 
 .otp-digit-field::placeholder {
@@ -244,3 +248,35 @@
   25% { transform: translateX(-4px); }
   75% { transform: translateX(4px); }
 }
+
+/* Responsive typography & container sizes */
+@media (max-width: 480px) {
+  .otp-card {
+    padding: 32px 20px;
+    margin: 0 12px;
+  }
+  .otp-card h1 {
+    font-size: clamp(18px, 6vw, 22px);
+  }
+  .otp-card .subtitle {
+    font-size: clamp(12px, 3.5vw, 13.5px);
+    margin-bottom: 20px;
+  }
+  .security-icon-container {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+  }
+  .security-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 360px) {
+  .otp-card {
+    padding: 24px 12px;
+    margin: 0 8px;
+  }
+}
+

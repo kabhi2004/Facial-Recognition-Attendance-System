@@ -184,3 +184,19 @@
     gap: 1.5rem;
   }
 }
+
+@media (max-width: 500px) {
+  .records-header {
+    align-items: stretch;
+  }
+  .actions-nav {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-back, .btn-export {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

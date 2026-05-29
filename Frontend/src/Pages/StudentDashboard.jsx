@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { getStudentAttendance, getStudentSummary, applyLeave, getStudentSubjects, getMyLeaves } from "../Api/Api";
+import { getStudentAttendance, getStudentSummary, applyLeave, getStudentSubjects, getMyLeaves, BASE_URL } from "../Api/Api";
 import { Tooltip } from "react-tooltip";
 import { format, subDays } from "date-fns";
 import { FiLogOut, FiAward, FiBook, FiMail, FiUser, FiCheckCircle } from "react-icons/fi";
@@ -59,7 +59,7 @@ export default function StudentDashboard() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://localhost:8000/photo/upload", {
+      const res = await fetch(`${BASE_URL}/photo/upload`, {
         method: "POST",
         body: formData,
       });
@@ -150,7 +150,7 @@ export default function StudentDashboard() {
         >
           {!imgError ? (
             <img
-              src={`http://localhost:8000/photo/student/${user?.student_id}?t=${cacheBust}`}
+              src={`${BASE_URL}/photo/student/${user?.student_id}?t=${cacheBust}`}
               alt={user?.name}
               className="student-profile-photo"
               onError={() => setImgError(true)}

@@ -110,6 +110,7 @@
 // export default RegisterFace;
 import { useRef, useState } from "react";
 import axios from "axios";
+import { BASE_URL } from "../Api/Api";
 
 function RegisterFace() {
   const videoRef = useRef(null);
@@ -153,7 +154,7 @@ function RegisterFace() {
 
       try {
         const res = await axios.post(
-          "http://localhost:8000/register-face",
+          `${BASE_URL}/register-face`,
           formData
         );
 

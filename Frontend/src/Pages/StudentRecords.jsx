@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiDownload, FiUser } from "react-icons/fi";
 import axios from "axios";
+import { BASE_URL } from "../Api/Api";
 import "./StudentRecords.css";
 
 export default function StudentRecords() {
@@ -15,7 +16,7 @@ export default function StudentRecords() {
 
   const fetchRecords = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/faculty/student-records");
+      const response = await axios.get(`${BASE_URL}/faculty/student-records`);
       setRecords(response.data.records);
     } catch (error) {
       console.error("Failed to fetch student records:", error);

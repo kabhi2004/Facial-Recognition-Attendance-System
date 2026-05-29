@@ -1,4 +1,5 @@
-const BASE_URL = "https://kabhi25-unicheck.hf.space";
+export const BASE_URL = "https://kabhi25-unicheck.hf.space";
+
 
 /* ---------- LOGIN ---------- */
 export async function loginUser(role, email, password) {

@@ -2,8 +2,8 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AdminFaceRegister.css";
 import { FaIdCard, FaCamera, FaVideoSlash, FaArrowLeft, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import { BASE_URL } from "../Api/Api";
 
-const BASE_URL = "http://localhost:8000";
 
 export default function AdminFaceRegister() {
   const navigate = useNavigate();

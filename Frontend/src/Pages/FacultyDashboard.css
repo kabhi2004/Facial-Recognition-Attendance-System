@@ -223,7 +223,7 @@
 }
 
 .profile-title-row h1 {
-  font-size: 26px;
+  font-size: clamp(20px, 4vw, 26px);
   font-weight: 700;
   color: #ffffff;
   margin: 0;
@@ -282,10 +282,11 @@
 
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
   margin-bottom: 3rem;
 }
+
 
 .action-card {
   padding: 2rem;
@@ -471,3 +472,53 @@
 .stop-btn:hover {
   background: #dc2626;
 }
+
+@media (max-width: 900px) {
+  .profile-header-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+    padding: 24px;
+  }
+  
+  .profile-title-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .profile-meta-grid {
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .dashboard-main {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-meta-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .dashboard-nav {
+    flex-direction: column;
+    gap: 16px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+  }
+  
+  .nav-actions {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .dashboard-main {
+    padding: 1.5rem 1rem;
+  }
+}
+
