@@ -32,6 +32,16 @@ export async function verifyOtp(role, email, otp) {
   return await res.json();
 }
 
+export async function resendOtp(email) {
+  const res = await fetch(`${BASE_URL}/resend-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+  return await res.json();
+}
+
+
 /* ---------- ATTENDANCE ---------- */
 export async function getTodayAttendance() {
   const res = await fetch(`${BASE_URL}/get-attendance-today`);
@@ -47,7 +57,25 @@ export async function getStudentSummary(id) {
   const res = await fetch(`${BASE_URL}/student/${id}/attendance-summary`);
   return await res.json();
 }
+export async function getAdminStats() {
+  const res = await fetch(`${BASE_URL}/admin/stats`);
+  return res.json();
+}
+
+export async function getAdminSubjects() {
+  const res = await fetch(`${BASE_URL}/admin/subjects`);
+  return res.json();
+}
+
+export async function getAdminFaculty() {
+  const res = await fetch(`${BASE_URL}/admin/faculty`);
+  return res.json();
+}
+
+
+
 export async function addStudent(data) {
+
   const res = await fetch(`${BASE_URL}/admin/add-student`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -105,5 +133,10 @@ export async function updateLeaveStatus(data) {
 
 export async function getMyLeaves(student_id) {
   const res = await fetch(`${BASE_URL}/student/${student_id}/leaves`);
+  return res.json();
+}
+
+export async function getFacultyStats(faculty_id) {
+  const res = await fetch(`${BASE_URL}/faculty/${faculty_id}/stats`);
   return res.json();
 }

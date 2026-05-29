@@ -8,3 +8,4 @@ pydantic
 mysql-connector-python
 deepface
 tf-keras
+requests

@@ -1,12 +1,71 @@
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiCamera, FiLogOut, FiUsers, FiClock, FiSettings, FiChevronRight } from "react-icons/fi";
+import { FiCamera, FiLogOut, FiUsers, FiClock, FiSettings, FiChevronRight, FiUser, FiBook, FiMail } from "react-icons/fi";
+import { getFacultyStats } from "../Api/Api";
 import "./FacultyDashboard.css";
 
 export default function FacultyDashboard() {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
+  const fileInputRef = useRef(null);
+  const [imgError, setImgError] = useState(false);
+  const [cacheBust, setCacheBust] = useState(Date.now());
+  const [stats, setStats] = useState({
+    total_classes: 0,
+    avg_attendance: 0.0,
+    enrolled_students: 0
+  });
+
+  useEffect(() => {
+    if (!user || user.role !== "Faculty") {
+      navigate("/login");
+      return;
+    }
+    
+    getFacultyStats(user.faculty_id || 1).then(res => {
+      if (res && res.success) {
+        setStats({
+          total_classes: res.total_classes,
+          avg_attendance: res.avg_attendance,
+          enrolled_students: res.enrolled_students
+        });
+      }
+    });
+  }, [user?.faculty_id]);
 
   const handleLogout = () => {
+    localStorage.removeItem("user");
     navigate("/");
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("person_type", "faculty");
+    formData.append("person_id", String(user.faculty_id));
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:8000/photo/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setImgError(false);
+        setCacheBust(Date.now()); // bust cache
+      } else {
+        alert("Upload failed: " + (data.message || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Error uploading photo: " + err.message);
+    }
   };
 
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -40,16 +99,56 @@ export default function FacultyDashboard() {
       </nav>
 
       <main className="dashboard-main">
-        <header className="dashboard-header">
-          <div className="greeting-sec">
-            <h1 className="gradient-text">Welcome back, Professor</h1>
-            <p>Manage today's attendance and monitor student progress.</p>
+        {/* FACULTY PROFILE CARD */}
+        <div className="profile-header-card">
+          <div 
+            className="profile-photo-section" 
+            onClick={triggerFileInput} 
+            title="Click to upload profile photo"
+          >
+            {!imgError ? (
+              <img
+                src={`http://localhost:8000/photo/faculty/${user?.faculty_id}?t=${cacheBust}`}
+                alt={user?.name}
+                className="student-profile-photo"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="student-profile-avatar">
+                {user?.name ? user.name.charAt(0).toUpperCase() : <FiUser size={36} />}
+              </div>
+            )}
           </div>
-          <div className="header-date">
-            <FiClock className="date-icon" size={18} />
-            <span>{currentDate}</span>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handlePhotoUpload} 
+            accept="image/*" 
+            hidden 
+          />
+
+          <div className="profile-info-section">
+            <div className="profile-title-row">
+              <h1 className="gradient-text">Welcome back, <span>Prof. {user?.name || "Professor"}</span></h1>
+              <span className="student-active-badge">Active Faculty</span>
+            </div>
+            
+            <div className="profile-meta-grid">
+              <div className="meta-item">
+                <FiBook className="meta-icon" />
+                <span><strong>Dept:</strong> {user?.department || "N/A"}</span>
+              </div>
+              <div className="meta-item">
+                <FiMail className="meta-icon" />
+                <span><strong>Email:</strong> {user?.email || "N/A"}</span>
+              </div>
+              <div className="meta-item">
+                <FiClock className="meta-icon" />
+                <span><strong>Session Date:</strong> {currentDate}</span>
+              </div>
+            </div>
           </div>
-        </header>
+        </div>
 
         <section className="quick-actions">
           <h2 className="section-title">Overview</h2>
@@ -107,25 +206,27 @@ export default function FacultyDashboard() {
         <section className="dashboard-stats">
           <div className="stat-card glass-effect">
             <div className="stat-info">
-              <h4>Total Classes</h4>
-              <h2>42</h2>
-              <span className="trend positive">↑ 12% this month</span>
+              <h4>Total Classes Conducted</h4>
+              <h2>{stats.total_classes}</h2>
+              <span className="trend positive">Live DB record</span>
             </div>
             <div className="stat-dec dec-blue"></div>
           </div>
           <div className="stat-card glass-effect">
             <div className="stat-info">
-              <h4>Avg. Attendance</h4>
-              <h2>87%</h2>
-              <span className="trend positive">↑ 5% from last week</span>
+              <h4>Avg. Attendance Rate</h4>
+              <h2>{stats.avg_attendance}%</h2>
+              <span className={`trend ${stats.avg_attendance >= 75 ? "positive" : "neutral"}`}>
+                {stats.avg_attendance >= 75 ? "Good Standings" : "Attention Required"}
+              </span>
             </div>
             <div className="stat-dec dec-green"></div>
           </div>
            <div className="stat-card glass-effect">
             <div className="stat-info">
               <h4>Students Enrolled</h4>
-              <h2>128</h2>
-              <span className="trend neutral">- No change</span>
+              <h2>{stats.enrolled_students}</h2>
+              <span className="trend neutral">Active count</span>
             </div>
              <div className="stat-dec dec-purple"></div>
           </div>

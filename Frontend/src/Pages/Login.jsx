@@ -26,6 +26,8 @@ export default function Login() {
           student_id: data.student_id,
           name: data.name,
           email: data.email,
+          roll_no: data.roll_no,
+          department: data.department
         })
       );
       navigate("/student/dashboard");
@@ -38,7 +40,11 @@ export default function Login() {
             JSON.stringify({
                 role: "Faculty",
                 email: data.email,
-                subject_id: data.subject_id
+                subject_id: data.subject_id,
+                faculty_id: data.faculty_id,
+                id: data.faculty_id,
+                name: data.name,
+                department: data.department
             })
         );
         navigate("/faculty/dashboard");

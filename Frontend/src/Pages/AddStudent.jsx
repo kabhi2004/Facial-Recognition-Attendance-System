@@ -1,51 +1,11 @@
-// import { useState } from "react";
-
-// const BASE_URL = "https://facial-recognition-attendance-system-production.up.railway.app";
-
-// export default function AddStudent() {
-//   const [form, setForm] = useState({
-//     roll_no: "",
-//     name: "",
-//     email: "",
-//     password: "",
-//     department: ""
-//   });
-
-//   function handleChange(e) {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//   }
-
-//   async function submit() {
-//     const res = await fetch(`${BASE_URL}/admin/add-student`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(form)
-//     });
-
-//     const data = await res.json();
-//     alert(data.message);
-//   }
-
-//   return (
-//     <div className="form-page">
-//       <h2>Add Student</h2>
-
-//       <input name="roll_no" placeholder="Roll No" onChange={handleChange} />
-//       <input name="name" placeholder="Name" onChange={handleChange} />
-//       <input name="email" placeholder="Email" onChange={handleChange} />
-//       <input name="password" placeholder="Password" type="password" onChange={handleChange} />
-//       <input name="department" placeholder="Department" onChange={handleChange} />
-
-//       <button onClick={submit}>Save Student</button>
-//     </div>
-//   );
-// }
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { addStudent } from "../Api/Api";
 import "./AddStudent.css";
-
-const BASE_URL = "http://localhost:8000";
+import { FaUser, FaEnvelope, FaLock, FaBuilding, FaIdCard, FaArrowLeft, FaPlus } from "react-icons/fa";
 
 export default function AddStudent() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     roll_no: "",
     name: "",
@@ -53,59 +13,147 @@ export default function AddStudent() {
     password: "",
     department: ""
   });
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setMessage({ text: "", type: "" });
   }
 
-  async function submit() {
-    const res = await fetch(`${BASE_URL}/admin/add-student`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.roll_no || !form.name || !form.email || !form.password || !form.department) {
+      setMessage({ text: "Please fill in all the details", type: "error" });
+      return;
+    }
 
-    const data = await res.json();
-    alert(data.message);
+    setLoading(true);
+    try {
+      const data = await addStudent(form);
+      if (data.success) {
+        setMessage({ text: "Student registered successfully!", type: "success" });
+        setForm({
+          roll_no: "",
+          name: "",
+          email: "",
+          password: "",
+          department: ""
+        });
+      } else {
+        setMessage({ text: data.message || "Failed to register student", type: "error" });
+      }
+    } catch (err) {
+      setMessage({ text: "Network error occurred", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="student-page">
-      <div className="student-card">
-        <h2>Add Student</h2>
+    <div className="admin-form-page">
+      <div className="form-glow-bg"></div>
+      
+      <div className="form-card-container">
+        <button className="form-back-btn" onClick={() => navigate("/admin/dashboard")}>
+          <FaArrowLeft className="back-icon" /> Back to Dashboard
+        </button>
 
-        <input
-          name="roll_no"
-          placeholder="Roll Number"
-          onChange={handleChange}
-        />
+        <div className="form-header">
+          <div className="header-icon-wrapper">
+            <FaUser className="header-icon" />
+          </div>
+          <h2>Register Student</h2>
+          <p>Add a new student profile to the secure college registry</p>
+        </div>
 
-        <input
-          name="name"
-          placeholder="Full Name"
-          onChange={handleChange}
-        />
+        {message.text && (
+          <div className={`form-feedback-banner ${message.type}`}>
+            {message.text}
+          </div>
+        )}
 
-        <input
-          name="email"
-          placeholder="Email Address"
-          onChange={handleChange}
-        />
+        <form onSubmit={submit} className="admin-interactive-form">
+          <div className="input-field-group">
+            <label>Roll Number</label>
+            <div className="input-wrapper">
+              <FaIdCard className="input-field-icon" />
+              <input
+                name="roll_no"
+                placeholder="e.g. MCA-2026-04"
+                value={form.roll_no}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-        />
+          <div className="input-field-group">
+            <label>Full Name</label>
+            <div className="input-wrapper">
+              <FaUser className="input-field-icon" />
+              <input
+                name="name"
+                placeholder="e.g. Abhishek Kashyap"
+                value={form.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
 
-        <input
-          name="department"
-          placeholder="Department"
-          onChange={handleChange}
-        />
+          <div className="input-field-group">
+            <label>Email Address</label>
+            <div className="input-wrapper">
+              <FaEnvelope className="input-field-icon" />
+              <input
+                type="email"
+                name="email"
+                placeholder="e.g. abhishekkashyap@college.edu"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
 
-        <button onClick={submit}>Save Student</button>
+          <div className="input-field-group">
+            <label>Security Password</label>
+            <div className="input-wrapper">
+              <FaLock className="input-field-icon" />
+              <input
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="input-field-group">
+            <label>Department</label>
+            <div className="input-wrapper">
+              <FaBuilding className="input-field-icon" />
+              <input
+                name="department"
+                placeholder="e.g. MCA / CSE"
+                value={form.department}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            className={`form-submit-btn ${loading ? "loading" : ""}`}
+            disabled={loading}
+          >
+            {loading ? "Registering..." : <><FaPlus /> Register Student</>}
+          </button>
+        </form>
       </div>
     </div>
   );

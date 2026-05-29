@@ -1,0 +1,20 @@
+# Ignore environment variables
+.env
+Backend/.env
+Frontend/.env
+
+# Ignore python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Ignore node modules and frontend build
+node_modules/
+dist/
+.vite/
+
+# Ignore local biometric photo records
+Backend/Data/photos/
+Backend/attendance/

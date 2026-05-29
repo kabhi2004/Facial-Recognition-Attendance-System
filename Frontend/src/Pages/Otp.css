@@ -1,71 +1,246 @@
-* {
-  box-sizing: border-box;
-  font-family: Inter, system-ui, sans-serif;
-}
-
 .otp-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  background-color: #0b0f19;
+  overflow: hidden;
+  color: #f3f4f6;
+  padding: 20px;
 }
 
+/* Ambient Radial Glow in Background */
+.otp-glow-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.05) 50%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Glassmorphic Verification Card */
 .otp-card {
-  width: 360px;
-  padding: 32px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: 40px 32px;
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   text-align: center;
+  z-index: 10;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
 }
 
+.otp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 30px 60px -10px rgba(99, 102, 241, 0.15), 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+/* Pulsing SVG Lock Shield Icon Container */
+.security-icon-container {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.security-icon-container::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  animation: pulse-ring 2.5s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.security-icon {
+  width: 36px;
+  height: 36px;
+  animation: shield-pulse 2s infinite ease-in-out;
+}
+
+/* Headings and Subtext */
 .otp-card h1 {
-  margin-bottom: 10px;
-  font-size: 26px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0 0 10px 0;
+  background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.otp-card p {
-  color: #6b7280;
-  font-size: 14px;
+.otp-card .subtitle {
+  color: #9ca3af;
+  font-size: 14.5px;
+  line-height: 1.5;
+  margin-bottom: 28px;
+}
+
+.email-highlight {
+  color: #818cf8;
+  font-weight: 600;
+}
+
+/* Error Banner styling */
+.otp-error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Inputs styling */
+.otp-inputs-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 28px;
+  direction: ltr;
+}
+
+.otp-digit-field {
+  width: 48px;
+  height: 56px;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(17, 24, 39, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #ffffff;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.otp-digit-field::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+  font-weight: 400;
+}
+
+.otp-digit-field:focus {
+  background: rgba(17, 24, 39, 0.8);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 0 15px rgba(99, 102, 241, 0.1);
+  transform: scale(1.05);
+}
+
+/* Buttons styling */
+.otp-verify-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  transition: all 0.2s ease;
   margin-bottom: 24px;
 }
 
-.otp-card span {
-  color: #2563eb;
+.otp-verify-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4), 0 0 12px rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+}
+
+.otp-verify-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+}
+
+/* Resend / Timer section */
+.otp-resend-section {
+  font-size: 13.5px;
+  color: #9ca3af;
+  margin-top: 10px;
+}
+
+.timer-text {
+  margin: 0;
   font-weight: 500;
 }
 
-.otp-card input {
-  width: 100%;
-  padding: 14px;
-  font-size: 18px;
-  text-align: center;
-  letter-spacing: 4px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  outline: none;
-  margin-bottom: 20px;
+.countdown {
+  color: #818cf8;
+  font-weight: 600;
 }
 
-.otp-card input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-.otp-card button {
-  width: 100%;
-  padding: 14px;
-  background: #2563eb;
-  color: white;
+.otp-resend-btn {
+  background: none;
   border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 500;
+  color: #818cf8;
+  font-size: 13.5px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
-.otp-card button:hover {
-  background: #1e40af;
+.otp-resend-btn:hover:not(:disabled) {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.1);
+  text-decoration: underline;
+}
+
+.otp-resend-btn.loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Keyframes animations */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes shield-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }

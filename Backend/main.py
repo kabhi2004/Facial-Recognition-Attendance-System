@@ -89,7 +89,9 @@ def login(data: LoginRequest):
             "role": "Student",
             "student_id": user["id"],
             "name": user["name"],
-            "email": user["email"]
+            "email": user["email"],
+            "roll_no": user["roll_no"],
+            "department": user["department"]
         }
 
     # ================= FACULTY / ADMIN =================
@@ -117,6 +119,9 @@ def verify_otp_api(data: OTPRequest):
             from Database import get_connection
             user = get_user("Faculty", data.email)
             if user:
+                response["faculty_id"] = user["id"]
+                response["name"] = user["name"]
+                response["department"] = user["department"]
                 conn = get_connection()
                 cur = conn.cursor(dictionary=True)
                 cur.execute("SELECT id FROM subjects WHERE faculty_id = %s LIMIT 1", (user["id"],))
@@ -129,8 +134,18 @@ def verify_otp_api(data: OTPRequest):
 
     return {"success": False, "message": message}
 
+
+class ResendOTPRequest(BaseModel):
+    email: str
+
+@app.post("/resend-otp")
+def resend_otp_api(data: ResendOTPRequest):
+    generate_and_send_otp(data.email)
+    return {"success": True, "message": "OTP resent successfully"}
+
 # =================================================
 # 😁 FACE LOGIN API 
+
 # =================================================
 from Database import get_user_by_id
 
@@ -185,12 +200,17 @@ async def face_login(
             "role": "Student",
             "student_id": user_id,
             "name": user["name"],
-            "email": user["email"]
+            "email": user["email"],
+            "roll_no": user["roll_no"],
+            "department": user["department"]
         })
     elif recognized_role == "Faculty":
         response.update({
             "role": "Faculty",
-            "email": user["email"]
+            "email": user["email"],
+            "faculty_id": user["id"],
+            "name": user["name"],
+            "department": user["department"]
         })
         from Database import get_connection
         conn = get_connection()
@@ -235,6 +255,16 @@ async def admin_register_face(
         samples.append(emb["embedding"])
 
     insert_face(person_type, int(person_id), np.array(samples))
+    
+    # Save the original image as student/faculty photo
+    try:
+        os.makedirs("Data/photos", exist_ok=True)
+        photo_path = f"Data/photos/{person_type.lower()}_{person_id}.jpg"
+        with open(photo_path, "wb") as f:
+            f.write(img_bytes)
+    except Exception as photo_err:
+        print(f"DEBUG: Failed to save profile photo: {photo_err}")
+
     recognizer.train()
 
     return {
@@ -431,7 +461,60 @@ class Subject(BaseModel):
 
 
 # -------- ROUTES --------
+@app.get("/admin/stats")
+def get_admin_stats():
+    from Database import get_connection
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    cur.execute("SELECT COUNT(*) as count FROM students")
+    students_count = cur.fetchone()["count"]
+    
+    cur.execute("SELECT COUNT(*) as count FROM faculty")
+    faculty_count = cur.fetchone()["count"]
+    
+    cur.execute("SELECT COUNT(*) as count FROM subjects")
+    subjects_count = cur.fetchone()["count"]
+    
+    cur.execute("SELECT COUNT(*) as count FROM attendance WHERE date = CURDATE() AND status = 'Present'")
+    today_present = cur.fetchone()["count"]
+    
+    cur.close()
+    conn.close()
+    
+    return {
+        "success": True,
+        "students": students_count,
+        "faculty": faculty_count,
+        "subjects": subjects_count,
+        "today_present": today_present
+    }
+
+@app.get("/admin/subjects")
+def get_all_subjects():
+    from Database import get_connection
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT id, subject_name, department FROM subjects ORDER BY subject_name")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return {"success": True, "subjects": rows}
+
+@app.get("/admin/faculty")
+def get_all_faculty():
+    from Database import get_connection
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT id, name, department FROM faculty ORDER BY name")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return {"success": True, "faculty": rows}
+
 @app.post("/admin/add-student")
+
+
 def add_student(data: Student):
     insert_student(**data.model_dump())
     return {"success": True,"message": "Student added successfully"}
@@ -489,3 +572,115 @@ def api_get_student_leaves(student_id: int):
     from utils.db_utils import fetch_student_leaves
     leaves = fetch_student_leaves(student_id)
     return {"success": True, "leaves": leaves}
+
+
+from fastapi.responses import FileResponse
+from fastapi import HTTPException
+
+@app.get("/photo/{person_type}/{person_id}")
+def get_profile_photo(person_type: str, person_id: int):
+    person_type = person_type.lower()
+    if person_type not in ["student", "faculty"]:
+        raise HTTPException(status_code=400, detail="Invalid person type")
+    
+    photo_path = f"Data/photos/{person_type}_{person_id}.jpg"
+    if os.path.exists(photo_path):
+        return FileResponse(photo_path)
+        
+    raise HTTPException(status_code=404, detail="Photo not found")
+
+
+@app.post("/photo/upload")
+async def upload_profile_photo(
+    person_type: str = Form(...),
+    person_id: int = Form(...),
+    file: UploadFile = File(...)
+):
+    person_type = person_type.lower()
+    if person_type not in ["student", "faculty"]:
+        raise HTTPException(status_code=400, detail="Invalid person type")
+        
+    img_bytes = await file.read()
+    
+    try:
+        os.makedirs("Data/photos", exist_ok=True)
+        photo_path = f"Data/photos/{person_type}_{person_id}.jpg"
+        with open(photo_path, "wb") as f:
+            f.write(img_bytes)
+        return {"success": True, "message": "Photo uploaded successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save photo: {e}")
+
+
+from Database import get_connection
+
+@app.get("/faculty/{faculty_id}/stats")
+def get_faculty_stats(faculty_id: int):
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    # 1. Get faculty details
+    cur.execute("SELECT department FROM faculty WHERE id = %s", (faculty_id,))
+    fac = cur.fetchone()
+    if not fac:
+        cur.close()
+        conn.close()
+        return {"success": False, "message": "Faculty not found"}
+    
+    dept = fac["department"]
+    
+    # 2. Get enrolled students count in this department
+    cur.execute("SELECT COUNT(*) as count FROM students WHERE department = %s", (dept,))
+    students_row = cur.fetchone()
+    enrolled = students_row["count"] if students_row else 0
+    
+    # 3. Get subject IDs taught by this faculty
+    cur.execute("SELECT id FROM subjects WHERE faculty_id = %s", (faculty_id,))
+    subs = cur.fetchall()
+    sub_ids = [s["id"] for s in subs]
+    
+    if not sub_ids:
+        cur.close()
+        conn.close()
+        return {
+            "success": True,
+            "total_classes": 0,
+            "avg_attendance": 0,
+            "enrolled_students": enrolled
+        }
+        
+    # 4. Count conducted classes (distinct dates in attendance for these subjects)
+    format_strings = ','.join(['%s'] * len(sub_ids))
+    cur.execute(
+        f"SELECT COUNT(DISTINCT date) as count FROM attendance WHERE subject_id IN ({format_strings})",
+        tuple(sub_ids)
+    )
+    classes_row = cur.fetchone()
+    total_classes = classes_row["count"] if classes_row else 0
+    
+    # 5. Count total 'Present' records
+    cur.execute(
+        f"SELECT COUNT(*) as count FROM attendance WHERE subject_id IN ({format_strings}) AND status = 'Present'",
+        tuple(sub_ids)
+    )
+    presents_row = cur.fetchone()
+    total_presents = presents_row["count"] if presents_row else 0
+    
+    # 6. Calculate average attendance percentage
+    if total_classes > 0 and enrolled > 0:
+        total_possible = total_classes * enrolled
+        avg_attendance = round((total_presents / total_possible) * 100, 1)
+        if avg_attendance > 100:
+            avg_attendance = 100.0
+    else:
+        avg_attendance = 0.0
+        
+    cur.close()
+    conn.close()
+    
+    return {
+        "success": True,
+        "total_classes": total_classes,
+        "avg_attendance": avg_attendance,
+        "enrolled_students": enrolled
+    }

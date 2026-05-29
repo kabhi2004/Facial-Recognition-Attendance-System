@@ -58,5 +58,5 @@ CREATE TABLE IF NOT EXISTS attendance (
     date DATE,
     status VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_attendance (student_id, date)
+    UNIQUE KEY unique_attendance (student_id, subject_id, date)
 );

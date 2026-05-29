@@ -74,12 +74,19 @@ def fetch_all_faces():
 
 def fetch_attendance_all():
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(dictionary=True)
 
     cur.execute("""
-        SELECT s.name, a.created_at
+        SELECT 
+            s.name as student_name,
+            s.roll_no,
+            s.department,
+            sub.subject_name,
+            a.status,
+            a.created_at
         FROM attendance a
         JOIN students s ON a.student_id = s.id
+        JOIN subjects sub ON a.subject_id = sub.id
         ORDER BY a.created_at DESC
     """)
 
@@ -88,13 +95,18 @@ def fetch_attendance_all():
     conn.close()
 
     result = []
-    for name, created_at in rows:
+    for row in rows:
         result.append({
-            "name": name,
-            "time": created_at.strftime("%Y-%m-%d %H:%M:%S")
+            "name": row["student_name"],
+            "roll_no": row["roll_no"],
+            "department": row["department"],
+            "subject": row["subject_name"],
+            "status": row["status"],
+            "time": row["created_at"].strftime("%Y-%m-%d %H:%M:%S")
         })
 
     return result
+
 # ===========================================================
 def insert_attendance(student_id: int, subject_id: int):
     conn = get_connection()

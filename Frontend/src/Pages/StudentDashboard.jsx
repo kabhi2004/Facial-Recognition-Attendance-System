@@ -1,12 +1,16 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { getStudentAttendance, getStudentSummary, applyLeave, getStudentSubjects, getMyLeaves } from "../Api/Api";
 import { Tooltip } from "react-tooltip";
 import { format, subDays } from "date-fns";
+import { FiLogOut, FiAward, FiBook, FiMail, FiUser, FiCheckCircle } from "react-icons/fi";
 import "react-tooltip/dist/react-tooltip.css";
 import "./StudentDashboard.css";
 
 export default function StudentDashboard() {
   const user = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [list, setList] = useState([]);
   const [summary, setSummary] = useState({});
   const [leaveDate, setLeaveDate] = useState("");
@@ -15,8 +19,14 @@ export default function StudentDashboard() {
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("");
   const [myLeaves, setMyLeaves] = useState([]);
+  const [imgError, setImgError] = useState(false);
+  const [cacheBust, setCacheBust] = useState(Date.now());
 
   useEffect(() => {
+    if (!user || user.role !== "Student") {
+      navigate("/login");
+      return;
+    }
     getMyLeaves(user.student_id).then(res => {
       if(res?.success) setMyLeaves(res.leaves);
     });
@@ -28,7 +38,47 @@ export default function StudentDashboard() {
     });
     getStudentAttendance(user.student_id).then(r => setList(r?.heatmap || []));
     getStudentSummary(user.student_id).then(setSummary);
-  }, [user.student_id]);
+  }, [user?.student_id]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("person_type", "student");
+    formData.append("person_id", String(user.student_id));
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:8000/photo/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setImgError(false);
+        setCacheBust(Date.now()); // bust cache
+      } else {
+        alert("Upload failed: " + (data.message || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Error uploading photo: " + err.message);
+    }
+  };
+
+  const attendancePercentage = useMemo(() => {
+    if (!summary.total || summary.total === 0) return 0;
+    return Math.round((summary.present / summary.total) * 100);
+  }, [summary]);
 
   // Process data for heatmap (Optimized to run only when 'list' changes)
   const { attendanceMap, days } = useMemo(() => {
@@ -91,15 +141,65 @@ export default function StudentDashboard() {
 
   return (
     <div className="dashboard-container">
-      {/* HEADER */}
-      <div className="dashboard-header">
-        <h1>
-          Welcome <span>{user?.name}</span>
-        </h1>
-        <p>Your attendance overview</p>
+      {/* STUDENT PROFILE CARD */}
+      <div className="profile-header-card">
+        <div 
+          className="profile-photo-section" 
+          onClick={triggerFileInput} 
+          title="Click to upload profile photo"
+        >
+          {!imgError ? (
+            <img
+              src={`http://localhost:8000/photo/student/${user?.student_id}?t=${cacheBust}`}
+              alt={user?.name}
+              className="student-profile-photo"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="student-profile-avatar">
+              {user?.name ? user.name.charAt(0).toUpperCase() : <FiUser size={36} />}
+            </div>
+          )}
+        </div>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handlePhotoUpload} 
+          accept="image/*" 
+          hidden 
+        />
+
+        <div className="profile-info-section">
+          <div className="profile-title-row">
+            <h1>Welcome, <span>{user?.name}</span></h1>
+            <span className="student-active-badge">Active Student</span>
+          </div>
+          
+          <div className="profile-meta-grid">
+            <div className="meta-item">
+              <FiAward className="meta-icon" />
+              <span><strong>Roll No:</strong> {user?.roll_no || "N/A"}</span>
+            </div>
+            <div className="meta-item">
+              <FiBook className="meta-icon" />
+              <span><strong>Dept:</strong> {user?.department || "N/A"}</span>
+            </div>
+            <div className="meta-item">
+              <FiMail className="meta-icon" />
+              <span><strong>Email:</strong> {user?.email || "N/A"}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="profile-action-section">
+          <button className="btn-logout-student" onClick={handleLogout}>
+            <FiLogOut size={16} />
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
 
-      {/* SUMMARY CARDS */}
+      {/* SUMMARY & PERFORMANCE CARDS */}
       <div className="summary-grid">
         <div className="summary-card present">
           <h2>{summary.present ?? 0}</h2>
@@ -111,9 +211,23 @@ export default function StudentDashboard() {
           <p>Absent</p>
         </div>
 
-        <div className="summary-card" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-          <h2 style={{ color: "#334155" }}>{summary.total ?? 0}</h2>
-          <p style={{ color: "#64748b" }}>Total Classes</p>
+        <div className="summary-card total-classes">
+          <h2>{summary.total ?? 0}</h2>
+          <p>Total Classes</p>
+        </div>
+
+        {/* PERFORMANCE CARD */}
+        <div className={`summary-card performance-card ${attendancePercentage >= 75 ? "good" : "poor"}`}>
+          <div className="performance-score">
+            <h2>{attendancePercentage}%</h2>
+            <span className="performance-badge">
+              {attendancePercentage >= 75 ? "Good" : "Low"}
+            </span>
+          </div>
+          <p>Attendance Rate</p>
+          <div className="attendance-progress-bar">
+            <div className="fill" style={{ width: `${attendancePercentage}%` }}></div>
+          </div>
         </div>
       </div>
 
