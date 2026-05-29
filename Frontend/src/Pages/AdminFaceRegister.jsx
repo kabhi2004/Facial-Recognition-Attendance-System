@@ -38,7 +38,10 @@ export default function AdminFaceRegister() {
 
   async function registerFace() {
     if (!personId) {
-      setMessage({ text: "Please enter a valid Student / Faculty ID", type: "error" });
+      setMessage({ 
+        text: personType === "student" ? "Please enter a valid Student Roll Number" : "Please enter a valid Faculty ID", 
+        type: "error" 
+      });
       return;
     }
 
@@ -117,7 +120,10 @@ export default function AdminFaceRegister() {
           <div className="input-field-group">
             <label>Person Role</label>
             <div className="input-wrapper">
-              <select value={personType} onChange={e => setPersonType(e.target.value)} className="afr-select">
+              <select value={personType} onChange={e => {
+                setPersonType(e.target.value);
+                setPersonId("");
+              }} className="afr-select">
                 <option value="student">Student</option>
                 <option value="faculty">Faculty</option>
               </select>
@@ -125,11 +131,11 @@ export default function AdminFaceRegister() {
           </div>
 
           <div className="input-field-group">
-            <label>Student / Faculty ID</label>
+            <label>{personType === "student" ? "Student Roll Number" : "Faculty ID"}</label>
             <div className="input-wrapper">
               <FaIdCard className="input-field-icon" />
               <input
-                placeholder="Enter database ID"
+                placeholder={personType === "student" ? "Enter Student Roll No. (e.g. 101)" : "Enter Faculty ID"}
                 value={personId}
                 onChange={e => setPersonId(e.target.value)}
                 className="afr-input"

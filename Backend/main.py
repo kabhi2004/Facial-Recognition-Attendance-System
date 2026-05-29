@@ -242,9 +242,43 @@ async def face_login(
 @app.post("/admin/register-face")
 async def admin_register_face(
     person_type: str = Form(...),
-    person_id: int = Form(...),
+    person_id: str = Form(...),
     file: UploadFile = File(...)
 ):
+    from Database import get_connection
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    real_person_id = None
+    if person_type.lower() == "student":
+        # person_id is Roll Number
+        cur.execute("SELECT id FROM students WHERE roll_no = %s", (person_id,))
+        row = cur.fetchone()
+        if not row:
+            cur.close()
+            conn.close()
+            return {"success": False, "message": f"Student with Roll No. '{person_id}' not found"}
+        real_person_id = row["id"]
+    else:
+        # person_type is faculty, person_id is Faculty ID
+        try:
+            faculty_db_id = int(person_id)
+        except ValueError:
+            cur.close()
+            conn.close()
+            return {"success": False, "message": "Invalid Faculty ID (must be a number)"}
+            
+        cur.execute("SELECT id FROM faculty WHERE id = %s", (faculty_db_id,))
+        row = cur.fetchone()
+        if not row:
+            cur.close()
+            conn.close()
+            return {"success": False, "message": f"Faculty with ID '{person_id}' not found"}
+        real_person_id = faculty_db_id
+        
+    cur.close()
+    conn.close()
+
     img_bytes = await file.read()
     np_img = np.frombuffer(img_bytes, np.uint8)
     frame = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
@@ -261,12 +295,12 @@ async def admin_register_face(
     for emb in embeddings:
         samples.append(emb["embedding"])
 
-    insert_face(person_type, int(person_id), np.array(samples))
+    insert_face(person_type, int(real_person_id), np.array(samples))
     
     # Save the original image as student/faculty photo
     try:
         os.makedirs("Data/photos", exist_ok=True)
-        photo_path = f"Data/photos/{person_type.lower()}_{person_id}.jpg"
+        photo_path = f"Data/photos/{person_type.lower()}_{real_person_id}.jpg"
         with open(photo_path, "wb") as f:
             f.write(img_bytes)
     except Exception as photo_err:
@@ -278,6 +312,7 @@ async def admin_register_face(
         "success": True,
         "samples_saved": len(samples)
     }
+
 
 # =================================================
 # 🔍 FACE RECOGNITION (IMAGE)
