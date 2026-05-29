@@ -13,9 +13,22 @@ export default function FacultyAttendance() {
 
   const [logs, setLogs] = useState([]);
   const [running, setRunning] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [facultySubjects, setFacultySubjects] = useState([]);
 
   useEffect(() => {
     startCamera();
+    
+    // Retrieve subjects from the logged in user profile
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const subs = user.subjects || [];
+    setFacultySubjects(subs);
+    if (subs.length > 0) {
+      setSelectedSubject(subs[0].id.toString());
+    } else if (user.subject_id) {
+      setSelectedSubject(user.subject_id.toString());
+    }
+
     return stopCamera; // cleanup on unmount
   }, []);
 
@@ -56,7 +69,7 @@ export default function FacultyAttendance() {
 
     canvas.toBlob(async blob => {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const subject_id = user.subject_id || 1;
+      const subject_id = selectedSubject || user.subject_id || 1;
 
       const formData = new FormData();
       formData.append("file", blob);
@@ -123,6 +136,51 @@ export default function FacultyAttendance() {
             </div>
 
             <div className="attendance-controls">
+              {facultySubjects.length > 0 && (
+                <div className="subject-select-container glass-effect" style={{
+                  width: "100%",
+                  marginBottom: "15px",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxSizing: "border-box",
+                  textAlign: "left"
+                }}>
+                  <label style={{
+                    display: "block",
+                    color: "rgba(255, 255, 255, 0.7)",
+                    fontSize: "13px",
+                    marginBottom: "6px",
+                    fontWeight: "500"
+                  }}>
+                    Select Subject for Attendance:
+                  </label>
+                  <select
+                    value={selectedSubject}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    disabled={running}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      background: "#1e293b",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#fff",
+                      outline: "none",
+                      cursor: "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    {facultySubjects.map(sub => (
+                      <option key={sub.id} value={sub.id} style={{ background: "#1e293b", color: "#fff" }}>
+                        {sub.subject_name} ({sub.department})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <button
                 className={running ? "action-btn running pulse-animation" : "action-btn primary-btn"}
                 onClick={startAttendance}

@@ -11,9 +11,9 @@ export default function AddFaculty() {
     name: "",
     email: "",
     password: "",
-    department: "",
-    subject_id: ""
+    department: ""
   });
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(false);
@@ -36,8 +36,8 @@ export default function AddFaculty() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!form.id || !form.name || !form.email || !form.password || !form.department || !form.subject_id) {
-      setMessage({ text: "Please fill in all the details", type: "error" });
+    if (!form.id || !form.name || !form.email || !form.password || !form.department || selectedSubjectIds.length === 0) {
+      setMessage({ text: "Please fill in all the details and select at least one subject", type: "error" });
       return;
     }
 
@@ -46,7 +46,7 @@ export default function AddFaculty() {
       const data = await addFaculty({
         ...form,
         id: Number(form.id),
-        subject_id: Number(form.subject_id)
+        subject_ids: selectedSubjectIds
       });
       if (data.success) {
         setMessage({ text: "Faculty registered successfully!", type: "success" });
@@ -55,9 +55,9 @@ export default function AddFaculty() {
           name: "",
           email: "",
           password: "",
-          department: "",
-          subject_id: ""
+          department: ""
         });
+        setSelectedSubjectIds([]);
       } else {
         setMessage({ text: data.message || "Failed to register faculty member", type: "error" });
       }
@@ -166,23 +166,45 @@ export default function AddFaculty() {
           </div>
 
           <div className="input-field-group">
-            <label>Teaching Subject</label>
-            <div className="input-wrapper">
-              <FaBook className="input-field-icon" />
-              <select
-                name="subject_id"
-                value={form.subject_id}
-                onChange={handleChange}
-                required
-                className="afr-select"
-              >
-                <option value="">-- Select Subject --</option>
+            <label>Teaching Subjects (Select one or more)</label>
+            <div className="input-wrapper" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
+              <div className="checkboxes-scroll-container" style={{
+                maxHeight: "150px",
+                overflowY: "auto",
+                background: "rgba(30, 41, 59, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                borderRadius: "8px",
+                padding: "10px",
+                width: "100%",
+                boxSizing: "border-box"
+              }}>
                 {subjects.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.subject_name} ({sub.department})
-                  </option>
+                  <label key={sub.id} style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    color: "#fff",
+                    padding: "6px 0",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    width: "100%"
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedSubjectIds.includes(sub.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedSubjectIds([...selectedSubjectIds, sub.id]);
+                        } else {
+                          setSelectedSubjectIds(selectedSubjectIds.filter(id => id !== sub.id));
+                        }
+                      }}
+                      style={{ cursor: "pointer", width: "16px", height: "16px", margin: 0 }}
+                    />
+                    <span>{sub.subject_name} ({sub.department})</span>
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
 

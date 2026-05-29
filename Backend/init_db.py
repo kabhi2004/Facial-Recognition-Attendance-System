@@ -60,6 +60,13 @@ def create_tables():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY unique_attendance (student_id, subject_id, date)
         )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS faculty_subjects (
+            faculty_id INT,
+            subject_id INT,
+            PRIMARY KEY (faculty_id, subject_id)
+        )
         """
     ]
 

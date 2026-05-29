@@ -8,9 +8,9 @@ export default function AddSubject() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     subject_name: "",
-    department: "",
-    faculty_id: ""
+    department: ""
   });
+  const [selectedFacultyIds, setSelectedFacultyIds] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [loading, setLoading] = useState(false);
@@ -33,8 +33,8 @@ export default function AddSubject() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!form.subject_name || !form.department || !form.faculty_id) {
-      setMessage({ text: "Please fill in all the details", type: "error" });
+    if (!form.subject_name || !form.department || selectedFacultyIds.length === 0) {
+      setMessage({ text: "Please fill in all the details and select at least one faculty", type: "error" });
       return;
     }
 
@@ -42,15 +42,15 @@ export default function AddSubject() {
     try {
       const data = await addSubject({
         ...form,
-        faculty_id: Number(form.faculty_id)
+        faculty_ids: selectedFacultyIds
       });
       if (data.success) {
         setMessage({ text: "Subject added successfully!", type: "success" });
         setForm({
           subject_name: "",
-          department: "",
-          faculty_id: ""
+          department: ""
         });
+        setSelectedFacultyIds([]);
       } else {
         setMessage({ text: data.message || "Failed to add subject", type: "error" });
       }
@@ -114,23 +114,45 @@ export default function AddSubject() {
           </div>
 
           <div className="input-field-group">
-            <label>Assigned Faculty</label>
-            <div className="input-wrapper">
-              <FaUserTie className="input-field-icon" />
-              <select
-                name="faculty_id"
-                value={form.faculty_id}
-                onChange={handleChange}
-                required
-                className="afr-select"
-              >
-                <option value="">-- Select Faculty --</option>
+            <label>Assigned Faculty (Select one or more)</label>
+            <div className="input-wrapper" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
+              <div className="checkboxes-scroll-container" style={{
+                maxHeight: "150px",
+                overflowY: "auto",
+                background: "rgba(30, 41, 59, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                borderRadius: "8px",
+                padding: "10px",
+                width: "100%",
+                boxSizing: "border-box"
+              }}>
                 {faculties.map((fac) => (
-                  <option key={fac.id} value={fac.id}>
-                    {fac.name} ({fac.department})
-                  </option>
+                  <label key={fac.id} style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    color: "#fff",
+                    padding: "6px 0",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    width: "100%"
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedFacultyIds.includes(fac.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedFacultyIds([...selectedFacultyIds, fac.id]);
+                        } else {
+                          setSelectedFacultyIds(selectedFacultyIds.filter(id => id !== fac.id));
+                        }
+                      }}
+                      style={{ cursor: "pointer", width: "16px", height: "16px", margin: 0 }}
+                    />
+                    <span>{fac.name} ({fac.department})</span>
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
 

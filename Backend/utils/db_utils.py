@@ -235,14 +235,28 @@ def insert_student(roll_no, name, email, password, department):
 
 
 # ---------- FACULTY ----------
-def insert_faculty(id, name, email, password, department, subject_id):
+def insert_faculty(id, name, email, password, department, subject_ids):
     conn = get_connection()
     cur = conn.cursor()
+
+    # For backward compatibility, save first subject_id in column
+    fallback_subject_id = subject_ids[0] if subject_ids else None
 
     cur.execute("""
         INSERT INTO faculty (id, name, email, password, department, subject_id)
         VALUES (%s, %s, %s, %s, %s, %s)
-    """, (id, name, email, password, department, subject_id))
+    """, (id, name, email, password, department, fallback_subject_id))
+
+    # Insert many-to-many associations
+    for sub_id in subject_ids:
+        try:
+            cur.execute("""
+                INSERT INTO faculty_subjects (faculty_id, subject_id)
+                VALUES (%s, %s)
+                ON DUPLICATE KEY UPDATE faculty_id=faculty_id
+            """, (id, sub_id))
+        except Exception as err:
+            print(f"DEBUG: Failed to map faculty_subject: {err}")
 
     conn.commit()
     cur.close()
@@ -250,14 +264,31 @@ def insert_faculty(id, name, email, password, department, subject_id):
 
 
 # ---------- SUBJECT ----------
-def insert_subject(subject_name, department, faculty_id):
+def insert_subject(subject_name, department, faculty_ids):
     conn = get_connection()
     cur = conn.cursor()
+
+    # For backward compatibility, save first faculty_id in column
+    fallback_faculty_id = faculty_ids[0] if faculty_ids else None
 
     cur.execute("""
         INSERT INTO subjects (subject_name, department, faculty_id)
         VALUES (%s, %s, %s)
-    """, (subject_name, department, faculty_id))
+    """, (subject_name, department, fallback_faculty_id))
+    
+    # Get the auto-incremented subject id
+    subject_id = cur.lastrowid
+
+    # Insert many-to-many associations
+    for fac_id in faculty_ids:
+        try:
+            cur.execute("""
+                INSERT INTO faculty_subjects (faculty_id, subject_id)
+                VALUES (%s, %s)
+                ON DUPLICATE KEY UPDATE faculty_id=faculty_id
+            """, (fac_id, subject_id))
+        except Exception as err:
+            print(f"DEBUG: Failed to map faculty_subject: {err}")
 
     conn.commit()
     cur.close()
@@ -356,7 +387,8 @@ def fetch_pending_leaves(faculty_id: int = None):
             FROM leave_applications l
             JOIN students s ON l.student_id = s.id
             JOIN subjects sub ON l.subject_id = sub.id
-            WHERE l.status = 'Pending' AND sub.faculty_id = %s
+            JOIN faculty_subjects fs ON sub.id = fs.subject_id
+            WHERE l.status = 'Pending' AND fs.faculty_id = %s
             ORDER BY l.created_at DESC
         """, (faculty_id,))
     else:

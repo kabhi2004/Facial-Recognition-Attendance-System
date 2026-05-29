@@ -127,12 +127,18 @@ def verify_otp_api(data: OTPRequest):
                 response["department"] = user["department"]
                 conn = get_connection()
                 cur = conn.cursor(dictionary=True)
-                cur.execute("SELECT id FROM subjects WHERE faculty_id = %s LIMIT 1", (user["id"],))
-                sub = cur.fetchone()
+                cur.execute("""
+                    SELECT s.id, s.subject_name, s.department
+                    FROM subjects s
+                    JOIN faculty_subjects fs ON s.id = fs.subject_id
+                    WHERE fs.faculty_id = %s
+                """, (user["id"],))
+                subs = cur.fetchall()
                 cur.close()
                 conn.close()
-                if sub:
-                    response["subject_id"] = sub["id"]
+                response["subjects"] = subs
+                if subs:
+                    response["subject_id"] = subs[0]["id"]
         elif data.role == "Admin":
             user = get_user("Admin", data.email)
             if user:
@@ -222,12 +228,18 @@ async def face_login(
         from Database import get_connection
         conn = get_connection()
         cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT id FROM subjects WHERE faculty_id = %s LIMIT 1", (user["id"],))
-        sub = cur.fetchone()
+        cur.execute("""
+            SELECT s.id, s.subject_name, s.department
+            FROM subjects s
+            JOIN faculty_subjects fs ON s.id = fs.subject_id
+            WHERE fs.faculty_id = %s
+        """, (user["id"],))
+        subs = cur.fetchall()
         cur.close()
         conn.close()
-        if sub:
-            response["subject_id"] = sub["id"]
+        response["subjects"] = subs
+        if subs:
+            response["subject_id"] = subs[0]["id"]
     elif recognized_role == "Admin":
          response.update({
              "role": "Admin",
@@ -507,12 +519,14 @@ class Faculty(BaseModel):
     email: str
     password: str
     department: str
-    subject_id: int
+    subject_ids: list[int] = None
+    subject_id: int = None
 
 class Subject(BaseModel):
     subject_name: str
     department: str
-    faculty_id: int
+    faculty_ids: list[int] = None
+    faculty_id: int = None
 
 
 # -------- ROUTES --------
@@ -576,12 +590,27 @@ def add_student(data: Student):
 
 @app.post("/admin/add-faculty")
 def add_faculty(data: Faculty):
-    insert_faculty(**data.model_dump())
+    # Resolve subject_ids from request or single subject_id fallback
+    subject_ids = data.subject_ids or ([data.subject_id] if data.subject_id is not None else [])
+    insert_faculty(
+        id=data.id,
+        name=data.name,
+        email=data.email,
+        password=data.password,
+        department=data.department,
+        subject_ids=subject_ids
+    )
     return {"success": True}
 
 @app.post("/admin/add-subject")
 def add_subject(data: Subject):
-    insert_subject(**data.model_dump())
+    # Resolve faculty_ids from request or single faculty_id fallback
+    faculty_ids = data.faculty_ids or ([data.faculty_id] if data.faculty_id is not None else [])
+    insert_subject(
+        subject_name=data.subject_name,
+        department=data.department,
+        faculty_ids=faculty_ids
+    )
     return {"success": True}
 
 # =================================================
@@ -690,7 +719,7 @@ def get_faculty_stats(faculty_id: int):
     enrolled = students_row["count"] if students_row else 0
     
     # 3. Get subject IDs taught by this faculty
-    cur.execute("SELECT id FROM subjects WHERE faculty_id = %s", (faculty_id,))
+    cur.execute("SELECT subject_id AS id FROM faculty_subjects WHERE faculty_id = %s", (faculty_id,))
     subs = cur.fetchall()
     sub_ids = [s["id"] for s in subs]
     
