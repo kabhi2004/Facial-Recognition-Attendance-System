@@ -7,15 +7,19 @@ from datetime import date
 import os
 from Database import get_connection
 #===============================================================================================
-def insert_face(person_type: str, person_id: int, samples: np.ndarray):
+def insert_face(person_type: str, person_id: str, samples: np.ndarray):
     conn = get_connection()
     cur = conn.cursor()
 
     # 🔒 HARD VALIDATION
     if person_type == "student":
-        cur.execute("SELECT id FROM students WHERE id=%s", (person_id,))
+        cur.execute("SELECT id FROM students WHERE roll_no=%s", (person_id,))
         if not cur.fetchone():
-            raise ValueError("Invalid student_id")
+            raise ValueError("Invalid student roll_no")
+    elif person_type == "faculty":
+        cur.execute("SELECT id FROM faculty WHERE id=%s", (person_id,))
+        if not cur.fetchone():
+            raise ValueError("Invalid faculty id")
 
     blob = pickle.dumps(samples)
 
@@ -34,12 +38,13 @@ def insert_face(person_type: str, person_id: int, samples: np.ndarray):
             INSERT INTO faces (person_type, person_id, face_data)
             VALUES (%s, %s, %s)
             """,
-            (person_type, int(person_id), blob)
+            (person_type, person_id, blob)
         )
 
     conn.commit()
     cur.close()
     conn.close()
+
 
 
 import pickle

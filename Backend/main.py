@@ -258,7 +258,7 @@ async def admin_register_face(
             cur.close()
             conn.close()
             return {"success": False, "message": f"Student with Roll No. '{person_id}' not found"}
-        real_person_id = row["id"]
+        real_person_id = person_id # Store Roll Number itself directly in faces table!
     else:
         # person_type is faculty, person_id is Faculty ID
         try:
@@ -274,7 +274,7 @@ async def admin_register_face(
             cur.close()
             conn.close()
             return {"success": False, "message": f"Faculty with ID '{person_id}' not found"}
-        real_person_id = faculty_db_id
+        real_person_id = str(faculty_db_id)
         
     cur.close()
     conn.close()
@@ -295,7 +295,7 @@ async def admin_register_face(
     for emb in embeddings:
         samples.append(emb["embedding"])
 
-    insert_face(person_type, int(real_person_id), np.array(samples))
+    insert_face(person_type, real_person_id, np.array(samples))
     
     # Save the original image as student/faculty photo
     try:
@@ -343,24 +343,36 @@ async def recognize(
             print("DEBUG: Ignored face because it's None or not a student")
             continue
             
-        student_id = person_data["id"]
+        student_roll_no = person_data["id"]
+
+        from Database import get_connection
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT id, name FROM students WHERE roll_no = %s", (student_roll_no,))
+        student_row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not student_row:
+            print(f"DEBUG: Student with Roll No. {student_roll_no} not found during recognition")
+            continue
+            
+        real_student_id = student_row["id"]
+        student_name = student_row["name"]
 
         try:
             # ✅ Mark attendance
             attendance = recognizer.mark_attendance(
-                student_id=student_id,
+                student_id=real_student_id,
                 subject_id=subject_id
             )
-            print(f"DEBUG: Attendance marked for {student_id}")
+            print(f"DEBUG: Attendance marked for student ID {real_student_id}")
         except Exception as e:
             print(f"DEBUG: Failed to mark attendance: {e}")
             continue
 
-        # ✅ Fetch student name
-        student_name = get_student_name_by_id(student_id)
-
         results.append({
-            "student_id": student_id,
+            "student_id": real_student_id,
             "name": student_name,
             "confidence": confidence,
             "timestamp": attendance["time"]

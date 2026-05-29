@@ -46,7 +46,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS faces (
             id INT AUTO_INCREMENT PRIMARY KEY,
             person_type VARCHAR(50),
-            person_id INT,
+            person_id VARCHAR(100),
             face_data MEDIUMBLOB
         )
         """,
