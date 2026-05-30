@@ -7,6 +7,7 @@ import { FaBook, FaBuilding, FaUserTie, FaArrowLeft, FaPlus } from "react-icons/
 export default function AddSubject() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
+    id: "",
     subject_name: "",
     department: ""
   });
@@ -33,7 +34,7 @@ export default function AddSubject() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!form.subject_name || !form.department || selectedFacultyIds.length === 0) {
+    if (!form.id || !form.subject_name || !form.department || selectedFacultyIds.length === 0) {
       setMessage({ text: "Please fill in all the details and select at least one faculty", type: "error" });
       return;
     }
@@ -47,6 +48,7 @@ export default function AddSubject() {
       if (data.success) {
         setMessage({ text: "Subject added successfully!", type: "success" });
         setForm({
+          id: "",
           subject_name: "",
           department: ""
         });
@@ -85,6 +87,20 @@ export default function AddSubject() {
         )}
 
         <form onSubmit={submit} className="admin-interactive-form">
+          <div className="input-field-group">
+            <label>Subject ID</label>
+            <div className="input-wrapper">
+              <FaBook className="input-field-icon" />
+              <input
+                name="id"
+                placeholder="e.g. CS101"
+                value={form.id}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
           <div className="input-field-group">
             <label>Subject Name</label>
             <div className="input-wrapper">

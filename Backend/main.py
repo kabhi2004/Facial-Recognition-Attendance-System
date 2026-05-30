@@ -493,10 +493,11 @@ class Faculty(BaseModel):
     email: str
     password: str
     department: str
-    subject_ids: list[int] = None
-    subject_id: int = None
+    subject_ids: list[str] = None
+    subject_id: str = None
 
 class Subject(BaseModel):
+    id: str
     subject_name: str
     department: str
     faculty_ids: list[int] = None
@@ -581,6 +582,7 @@ def add_subject(data: Subject):
     # Resolve faculty_ids from request or single faculty_id fallback
     faculty_ids = data.faculty_ids or ([data.faculty_id] if data.faculty_id is not None else [])
     insert_subject(
+        subject_id=data.id,
         subject_name=data.subject_name,
         department=data.department,
         faculty_ids=faculty_ids

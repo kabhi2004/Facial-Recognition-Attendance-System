@@ -262,29 +262,20 @@ def insert_faculty(id, name, email, password, department, subject_ids):
     conn.close()
 
 
-# ---------- SUBJECT ----------
-def insert_subject(subject_name, department, faculty_ids):
+def insert_subject(subject_id, subject_name, department, faculty_ids):
     conn = get_connection()
     cur = conn.cursor()
 
     if not faculty_ids:
         faculty_ids = [1]
 
-    # 1. Insert first row to generate auto-incremented subject id
-    first_fac_id = faculty_ids[0]
-    cur.execute("""
-        INSERT INTO subjects (subject_name, department, faculty_id)
-        VALUES (%s, %s, %s)
-    """, (subject_name, department, first_fac_id))
-    subject_id = cur.lastrowid
-
-    # 2. Insert additional rows with the same subject_id for other assigned faculties
-    for fac_id in faculty_ids[1:]:
+    # Insert one row for each mapped faculty_id to satisfy composite primary key (id, faculty_id)
+    for fac_id in faculty_ids:
         try:
             cur.execute("""
                 INSERT INTO subjects (id, subject_name, department, faculty_id)
                 VALUES (%s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE subject_name=subject_name
+                ON DUPLICATE KEY UPDATE subject_name=subject_name, department=department
             """, (subject_id, subject_name, department, fac_id))
         except Exception as err:
             print(f"DEBUG: Failed to insert subject faculty row: {err}")
@@ -350,7 +341,7 @@ def create_leave_table_if_not_exists():
         CREATE TABLE IF NOT EXISTS leave_applications (
             id INT AUTO_INCREMENT PRIMARY KEY,
             student_id INT,
-            subject_id INT,
+            subject_id VARCHAR(100),
             date DATE,
             reason TEXT,
             status VARCHAR(50) DEFAULT 'Pending',
@@ -359,7 +350,7 @@ def create_leave_table_if_not_exists():
     """)
     # Try to alter table if subject_id doesn't exist (for existing tables)
     try:
-        cur.execute("ALTER TABLE leave_applications ADD COLUMN subject_id INT DEFAULT 1")
+        cur.execute("ALTER TABLE leave_applications ADD COLUMN subject_id VARCHAR(100) DEFAULT '1'")
     except:
         pass # Column already exists
         

@@ -28,7 +28,7 @@ def test():
         "email": "testcomposite@college.edu",
         "password": "password",
         "department": "CSE",
-        "subject_ids": [1, 2]
+        "subject_ids": ["1", "2"]
     }
     
     print(f"\nSending POST to /admin/add-faculty with: {payload_fac}")
@@ -37,6 +37,7 @@ def test():
     
     # 3. Add Subject with Multiple Faculties
     payload_sub = {
+        "id": "TS101",
         "subject_name": "Test Composite Subject",
         "department": "CSE",
         "faculty_ids": [1, test_faculty_id]

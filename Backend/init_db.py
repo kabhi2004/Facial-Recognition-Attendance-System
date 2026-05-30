@@ -31,13 +31,13 @@ def create_tables():
             email VARCHAR(100),
             password VARCHAR(100),
             department VARCHAR(100),
-            subject_id INT,
+            subject_id VARCHAR(100),
             PRIMARY KEY (id, subject_id)
         )
         """,
         """
         CREATE TABLE IF NOT EXISTS subjects (
-            id INT AUTO_INCREMENT,
+            id VARCHAR(100),
             subject_name VARCHAR(100),
             department VARCHAR(100),
             faculty_id INT,
@@ -56,7 +56,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS attendance (
             id INT AUTO_INCREMENT PRIMARY KEY,
             student_id INT,
-            subject_id INT,
+            subject_id VARCHAR(100),
             date DATE,
             status VARCHAR(50),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
