@@ -62,7 +62,7 @@
   display: grid;
   grid-template-columns: 1fr 400px;
   gap: 2rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .camera-section {
@@ -229,7 +229,6 @@
 .logs-section {
   padding: 1.5rem;
   height: 100%;
-  max-height: 600px;
   display: flex;
   flex-direction: column;
 }
