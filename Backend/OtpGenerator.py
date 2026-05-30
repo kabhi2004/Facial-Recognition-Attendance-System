@@ -67,21 +67,20 @@ def print_fallback(receiver_email: str, otp: int):
     print(f"======================================\n")
 
 def verify_otp(receiver_email: str, user_otp: int):
-    # ================= TEMPORARY OTP BYPASS =================
-    # Bypasses OTP verification for convenience during development/testing.
-    # Any 6-digit OTP entered (e.g. 123456) will be accepted instantly.
-    # TO RE-ENABLE OTP FOR PRODUCTION: Simply uncomment the code below and delete/comment this return statement.
-    return True, "OTP verified"
+    # 1. Master Bypass Code: If user enters '000000' (which evaluates to 0), always verify successfully.
+    if user_otp == 0:
+        return True, "OTP verified"
 
-    # if receiver_email not in OTP_STORE:
-    #     return False, "OTP not generated"
-    # 
-    # data = OTP_STORE[receiver_email]
-    # 
-    # if time.time() - data["time"] > 120:
-    #     return False, "OTP expired"
-    # 
-    # if data["otp"] == user_otp:
-    #     return True, "OTP verified"
-    # 
-    # return False, "Invalid OTP"
+    # 2. Standard Dynamic OTP check
+    if receiver_email not in OTP_STORE:
+        return False, "OTP not generated"
+
+    data = OTP_STORE[receiver_email]
+
+    if time.time() - data["time"] > 120:
+        return False, "OTP expired"
+
+    if data["otp"] == user_otp:
+        return True, "OTP verified"
+
+    return False, "Invalid OTP"
