@@ -327,11 +327,13 @@ def get_student_subjects(student_id: int):
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
     cur.execute("""
-        SELECT sub.id, sub.subject_name, f.name as faculty_name
+        SELECT sub.id, sub.subject_name, GROUP_CONCAT(f.name SEPARATOR ', ') as faculty_name
         FROM subjects sub
         JOIN students s ON s.department = sub.department
-        LEFT JOIN faculty f ON sub.faculty_id = f.id
+        LEFT JOIN faculty_subjects fs ON sub.id = fs.subject_id
+        LEFT JOIN faculty f ON fs.faculty_id = f.id
         WHERE s.id = %s
+        GROUP BY sub.id, sub.subject_name
     """, (student_id,))
     rows = cur.fetchall()
     cur.close()
