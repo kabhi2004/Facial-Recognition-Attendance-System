@@ -28,11 +28,37 @@ def get_user(role: str, email: str):
     cur = conn.cursor(dictionary=True)
 
     cur.execute(f"SELECT * FROM {table} WHERE email=%s", (email,))
-    user = cur.fetchone()
+    rows = cur.fetchall()
 
     cur.close()
     conn.close()
-    return user
+    
+    if not rows:
+        return None
+
+    if role == "Faculty":
+        user = rows[0]
+        # Query subject details for all mapped subject_ids to populate subjects array
+        conn_sub = get_connection()
+        cur_sub = conn_sub.cursor(dictionary=True)
+        subject_ids = [r['subject_id'] for r in rows if r['subject_id'] is not None]
+        subjects = []
+        if subject_ids:
+            format_strings = ','.join(['%s'] * len(subject_ids))
+            cur_sub.execute(f"""
+                SELECT DISTINCT id, subject_name, department 
+                FROM subjects 
+                WHERE id IN ({format_strings})
+            """, tuple(subject_ids))
+            subjects = cur_sub.fetchall()
+        cur_sub.close()
+        conn_sub.close()
+        
+        user['subjects'] = subjects
+        user['subject_id'] = rows[0]['subject_id']
+        return user
+
+    return rows[0]
 
 
 def get_user_by_id(role: str, user_id: int):
@@ -50,8 +76,33 @@ def get_user_by_id(role: str, user_id: int):
     cur = conn.cursor(dictionary=True)
 
     cur.execute(f"SELECT * FROM {table} WHERE id=%s", (user_id,))
-    user = cur.fetchone()
+    rows = cur.fetchall()
 
     cur.close()
     conn.close()
-    return user
+    
+    if not rows:
+        return None
+
+    if role == "Faculty":
+        user = rows[0]
+        conn_sub = get_connection()
+        cur_sub = conn_sub.cursor(dictionary=True)
+        subject_ids = [r['subject_id'] for r in rows if r['subject_id'] is not None]
+        subjects = []
+        if subject_ids:
+            format_strings = ','.join(['%s'] * len(subject_ids))
+            cur_sub.execute(f"""
+                SELECT DISTINCT id, subject_name, department 
+                FROM subjects 
+                WHERE id IN ({format_strings})
+            """, tuple(subject_ids))
+            subjects = cur_sub.fetchall()
+        cur_sub.close()
+        conn_sub.close()
+        
+        user['subjects'] = subjects
+        user['subject_id'] = rows[0]['subject_id']
+        return user
+
+    return rows[0]

@@ -119,26 +119,13 @@ def verify_otp_api(data: OTPRequest):
             "message": "Login successful"
         }
         if data.role == "Faculty":
-            from Database import get_connection
             user = get_user("Faculty", data.email)
             if user:
                 response["faculty_id"] = user["id"]
                 response["name"] = user["name"]
                 response["department"] = user["department"]
-                conn = get_connection()
-                cur = conn.cursor(dictionary=True)
-                cur.execute("""
-                    SELECT s.id, s.subject_name, s.department
-                    FROM subjects s
-                    JOIN faculty_subjects fs ON s.id = fs.subject_id
-                    WHERE fs.faculty_id = %s
-                """, (user["id"],))
-                subs = cur.fetchall()
-                cur.close()
-                conn.close()
-                response["subjects"] = subs
-                if subs:
-                    response["subject_id"] = subs[0]["id"]
+                response["subjects"] = user.get("subjects", [])
+                response["subject_id"] = user.get("subject_id")
         elif data.role == "Admin":
             user = get_user("Admin", data.email)
             if user:
@@ -223,23 +210,10 @@ async def face_login(
             "email": user["email"],
             "faculty_id": user["id"],
             "name": user["name"],
-            "department": user["department"]
+            "department": user["department"],
+            "subjects": user.get("subjects", []),
+            "subject_id": user.get("subject_id")
         })
-        from Database import get_connection
-        conn = get_connection()
-        cur = conn.cursor(dictionary=True)
-        cur.execute("""
-            SELECT s.id, s.subject_name, s.department
-            FROM subjects s
-            JOIN faculty_subjects fs ON s.id = fs.subject_id
-            WHERE fs.faculty_id = %s
-        """, (user["id"],))
-        subs = cur.fetchall()
-        cur.close()
-        conn.close()
-        response["subjects"] = subs
-        if subs:
-            response["subject_id"] = subs[0]["id"]
     elif recognized_role == "Admin":
          response.update({
              "role": "Admin",
@@ -704,7 +678,7 @@ def get_faculty_stats(faculty_id: int):
     cur = conn.cursor(dictionary=True)
     
     # 1. Get faculty details
-    cur.execute("SELECT department FROM faculty WHERE id = %s", (faculty_id,))
+    cur.execute("SELECT department FROM faculty WHERE id = %s LIMIT 1", (faculty_id,))
     fac = cur.fetchone()
     if not fac:
         cur.close()
@@ -719,7 +693,7 @@ def get_faculty_stats(faculty_id: int):
     enrolled = students_row["count"] if students_row else 0
     
     # 3. Get subject IDs taught by this faculty
-    cur.execute("SELECT subject_id AS id FROM faculty_subjects WHERE faculty_id = %s", (faculty_id,))
+    cur.execute("SELECT DISTINCT subject_id AS id FROM faculty WHERE id = %s", (faculty_id,))
     subs = cur.fetchall()
     sub_ids = [s["id"] for s in subs]
     

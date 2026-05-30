@@ -91,7 +91,9 @@ def fetch_attendance_all():
             a.created_at
         FROM attendance a
         JOIN students s ON a.student_id = s.id
-        JOIN subjects sub ON a.subject_id = sub.id
+        JOIN (
+            SELECT DISTINCT id, subject_name FROM subjects
+        ) sub ON a.subject_id = sub.id
         ORDER BY a.created_at DESC
     """)
 
@@ -156,7 +158,9 @@ def fetch_attendance_by_student_id(student_id: int):
             a.status,
             s.subject_name
         FROM attendance a
-        JOIN subjects s ON a.subject_id = s.id
+        JOIN (
+            SELECT DISTINCT id, subject_name FROM subjects
+        ) s ON a.subject_id = s.id
         WHERE a.student_id = %s
         ORDER BY a.date DESC
         """,
@@ -239,24 +243,19 @@ def insert_faculty(id, name, email, password, department, subject_ids):
     conn = get_connection()
     cur = conn.cursor()
 
-    # For backward compatibility, save first subject_id in column
-    fallback_subject_id = subject_ids[0] if subject_ids else None
+    if not subject_ids:
+        subject_ids = [1]
 
-    cur.execute("""
-        INSERT INTO faculty (id, name, email, password, department, subject_id)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (id, name, email, password, department, fallback_subject_id))
-
-    # Insert many-to-many associations
+    # Insert one row for each mapped subject_id to satisfy composite primary key (id, subject_id)
     for sub_id in subject_ids:
         try:
             cur.execute("""
-                INSERT INTO faculty_subjects (faculty_id, subject_id)
-                VALUES (%s, %s)
-                ON DUPLICATE KEY UPDATE faculty_id=faculty_id
-            """, (id, sub_id))
+                INSERT INTO faculty (id, name, email, password, department, subject_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE name=name, email=email, password=password, department=department
+            """, (id, name, email, password, department, sub_id))
         except Exception as err:
-            print(f"DEBUG: Failed to map faculty_subject: {err}")
+            print(f"DEBUG: Failed to insert faculty subject row: {err}")
 
     conn.commit()
     cur.close()
@@ -268,27 +267,27 @@ def insert_subject(subject_name, department, faculty_ids):
     conn = get_connection()
     cur = conn.cursor()
 
-    # For backward compatibility, save first faculty_id in column
-    fallback_faculty_id = faculty_ids[0] if faculty_ids else None
+    if not faculty_ids:
+        faculty_ids = [1]
 
+    # 1. Insert first row to generate auto-incremented subject id
+    first_fac_id = faculty_ids[0]
     cur.execute("""
         INSERT INTO subjects (subject_name, department, faculty_id)
         VALUES (%s, %s, %s)
-    """, (subject_name, department, fallback_faculty_id))
-    
-    # Get the auto-incremented subject id
+    """, (subject_name, department, first_fac_id))
     subject_id = cur.lastrowid
 
-    # Insert many-to-many associations
-    for fac_id in faculty_ids:
+    # 2. Insert additional rows with the same subject_id for other assigned faculties
+    for fac_id in faculty_ids[1:]:
         try:
             cur.execute("""
-                INSERT INTO faculty_subjects (faculty_id, subject_id)
-                VALUES (%s, %s)
-                ON DUPLICATE KEY UPDATE faculty_id=faculty_id
-            """, (fac_id, subject_id))
+                INSERT INTO subjects (id, subject_name, department, faculty_id)
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE subject_name=subject_name
+            """, (subject_id, subject_name, department, fac_id))
         except Exception as err:
-            print(f"DEBUG: Failed to map faculty_subject: {err}")
+            print(f"DEBUG: Failed to insert subject faculty row: {err}")
 
     conn.commit()
     cur.close()
@@ -327,13 +326,16 @@ def get_student_subjects(student_id: int):
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
     cur.execute("""
-        SELECT sub.id, sub.subject_name, GROUP_CONCAT(f.name SEPARATOR ', ') as faculty_name
-        FROM subjects sub
+        SELECT sub.id, sub.subject_name, 
+               (SELECT GROUP_CONCAT(f.name SEPARATOR ', ') 
+                FROM faculty f 
+                WHERE f.subject_id = sub.id) as faculty_name
+        FROM (
+            SELECT DISTINCT id, subject_name, department 
+            FROM subjects
+        ) sub
         JOIN students s ON s.department = sub.department
-        LEFT JOIN faculty_subjects fs ON sub.id = fs.subject_id
-        LEFT JOIN faculty f ON fs.faculty_id = f.id
         WHERE s.id = %s
-        GROUP BY sub.id, sub.subject_name
     """, (student_id,))
     rows = cur.fetchall()
     cur.close()
@@ -388,9 +390,11 @@ def fetch_pending_leaves(faculty_id: int = None):
             SELECT l.id, l.date, l.reason, l.status, s.name, s.roll_no, s.department, sub.subject_name
             FROM leave_applications l
             JOIN students s ON l.student_id = s.id
-            JOIN subjects sub ON l.subject_id = sub.id
-            JOIN faculty_subjects fs ON sub.id = fs.subject_id
-            WHERE l.status = 'Pending' AND fs.faculty_id = %s
+            JOIN (
+                SELECT DISTINCT id, subject_name FROM subjects
+            ) sub ON l.subject_id = sub.id
+            JOIN faculty f ON l.subject_id = f.subject_id
+            WHERE l.status = 'Pending' AND f.id = %s
             ORDER BY l.created_at DESC
         """, (faculty_id,))
     else:
@@ -447,7 +451,9 @@ def fetch_student_leaves(student_id: int):
     cur.execute("""
         SELECT l.id, l.date, l.reason, l.status, sub.subject_name
         FROM leave_applications l
-        LEFT JOIN subjects sub ON l.subject_id = sub.id
+        LEFT JOIN (
+            SELECT DISTINCT id, subject_name FROM subjects
+        ) sub ON l.subject_id = sub.id
         WHERE l.student_id = %s
         ORDER BY l.created_at DESC
     """, (student_id,))
