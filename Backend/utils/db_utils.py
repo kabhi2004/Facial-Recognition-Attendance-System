@@ -241,21 +241,35 @@ def insert_student(roll_no, name, email, password, department):
 # ---------- FACULTY ----------
 def insert_faculty(id, name, email, password, department, subject_ids):
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(dictionary=True)
 
     if not subject_ids:
-        subject_ids = [1]
+        subject_ids = ["1"]
 
     # Insert one row for each mapped subject_id to satisfy composite primary key (id, subject_id)
     for sub_id in subject_ids:
+        sub_id_str = str(sub_id)
         try:
             cur.execute("""
                 INSERT INTO faculty (id, name, email, password, department, subject_id)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE name=name, email=email, password=password, department=department
-            """, (id, name, email, password, department, sub_id))
+            """, (id, name, email, password, department, sub_id_str))
         except Exception as err:
             print(f"DEBUG: Failed to insert faculty subject row: {err}")
+
+        # Reciprocally write the mapping into the 'subjects' table
+        try:
+            cur.execute("SELECT DISTINCT subject_name, department FROM subjects WHERE id = %s LIMIT 1", (sub_id_str,))
+            sub = cur.fetchone()
+            if sub:
+                cur.execute("""
+                    INSERT INTO subjects (id, subject_name, department, faculty_id)
+                    VALUES (%s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE subject_name=subject_name, department=department
+                """, (sub_id_str, sub['subject_name'], sub['department'], id))
+        except Exception as err:
+            print(f"DEBUG: Failed to insert subject faculty row during faculty registration: {err}")
 
     conn.commit()
     cur.close()
@@ -264,21 +278,35 @@ def insert_faculty(id, name, email, password, department, subject_ids):
 
 def insert_subject(subject_id, subject_name, department, faculty_ids):
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(dictionary=True)
 
     if not faculty_ids:
         faculty_ids = [1]
 
     # Insert one row for each mapped faculty_id to satisfy composite primary key (id, faculty_id)
     for fac_id in faculty_ids:
+        fac_id_int = int(fac_id)
         try:
             cur.execute("""
                 INSERT INTO subjects (id, subject_name, department, faculty_id)
                 VALUES (%s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE subject_name=subject_name, department=department
-            """, (subject_id, subject_name, department, fac_id))
+            """, (subject_id, subject_name, department, fac_id_int))
         except Exception as err:
             print(f"DEBUG: Failed to insert subject faculty row: {err}")
+
+        # Reciprocally write the mapping into the 'faculty' table
+        try:
+            cur.execute("SELECT DISTINCT name, email, password, department FROM faculty WHERE id = %s LIMIT 1", (fac_id_int,))
+            fac = cur.fetchone()
+            if fac:
+                cur.execute("""
+                    INSERT INTO faculty (id, name, email, password, department, subject_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE name=name, email=email, password=password, department=department
+                """, (fac_id_int, fac['name'], fac['email'], fac['password'], fac['department'], subject_id))
+        except Exception as err:
+            print(f"DEBUG: Failed to insert faculty subject row during subject creation: {err}")
 
     conn.commit()
     cur.close()

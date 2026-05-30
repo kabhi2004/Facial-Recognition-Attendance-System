@@ -65,7 +65,7 @@ def test():
     rows = cur.fetchall()
     print(f"\nDirect query 'SELECT * FROM faculty WHERE id = {test_faculty_id}':\n{rows}")
     
-    if len(rows) == 2 and user and len(user.get('subjects', [])) == 2:
+    if len(rows) == 3 and user and len(user.get('subjects', [])) == 3:
         db_verified = True
         
     if db_verified:
