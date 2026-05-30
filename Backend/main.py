@@ -615,6 +615,36 @@ def api_pending_leaves(faculty_id: int):
     leaves = fetch_pending_leaves(faculty_id)
     return {"success": True, "leaves": leaves}
 
+@app.get("/faculty/{faculty_id}/subjects")
+def api_get_faculty_subjects(faculty_id: int):
+    from Database import get_connection
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT DISTINCT subject_id AS id FROM faculty WHERE id = %s", (faculty_id,))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    if not rows:
+        return {"success": True, "subjects": []}
+        
+    subject_ids = [r['id'] for r in rows if r['id'] is not None]
+    subjects = []
+    if subject_ids:
+        conn_sub = get_connection()
+        cur_sub = conn_sub.cursor(dictionary=True)
+        format_strings = ','.join(['%s'] * len(subject_ids))
+        cur_sub.execute(f"""
+            SELECT DISTINCT id, subject_name, department 
+            FROM subjects 
+            WHERE id IN ({format_strings})
+        """, tuple(subject_ids))
+        subjects = cur_sub.fetchall()
+        cur_sub.close()
+        conn_sub.close()
+        
+    return {"success": True, "subjects": subjects}
+
 class LeaveStatusUpdate(BaseModel):
     leave_id: int
     status: str

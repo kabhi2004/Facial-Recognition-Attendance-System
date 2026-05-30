@@ -19,14 +19,39 @@ export default function FacultyAttendance() {
   useEffect(() => {
     startCamera();
     
-    // Retrieve subjects from the logged in user profile
+    // Retrieve subjects dynamically from the backend to ensure fresh database records
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const subs = user.subjects || [];
-    setFacultySubjects(subs);
-    if (subs.length > 0) {
-      setSelectedSubject(subs[0].id.toString());
-    } else if (user.subject_id) {
-      setSelectedSubject(user.subject_id.toString());
+    const facultyId = user.faculty_id || user.id;
+    if (facultyId) {
+      fetch(`${BASE_URL}/faculty/${facultyId}/subjects`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.subjects) {
+            setFacultySubjects(data.subjects);
+            if (data.subjects.length > 0) {
+              setSelectedSubject(data.subjects[0].id.toString());
+            }
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch faculty subjects:", err);
+          // Fallback to localStorage session
+          const subs = user.subjects || [];
+          setFacultySubjects(subs);
+          if (subs.length > 0) {
+            setSelectedSubject(subs[0].id.toString());
+          } else if (user.subject_id) {
+            setSelectedSubject(user.subject_id.toString());
+          }
+        });
+    } else {
+      const subs = user.subjects || [];
+      setFacultySubjects(subs);
+      if (subs.length > 0) {
+        setSelectedSubject(subs[0].id.toString());
+      } else if (user.subject_id) {
+        setSelectedSubject(user.subject_id.toString());
+      }
     }
 
     return stopCamera; // cleanup on unmount
