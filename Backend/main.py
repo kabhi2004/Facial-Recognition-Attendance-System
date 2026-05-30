@@ -538,7 +538,7 @@ def get_all_subjects():
     from Database import get_connection
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT id, subject_name, department FROM subjects ORDER BY subject_name")
+    cur.execute("SELECT DISTINCT id, subject_name, department FROM subjects ORDER BY subject_name")
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -549,7 +549,7 @@ def get_all_faculty():
     from Database import get_connection
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT id, name, department FROM faculty ORDER BY name")
+    cur.execute("SELECT DISTINCT id, name, department FROM faculty ORDER BY name")
     rows = cur.fetchall()
     cur.close()
     conn.close()
