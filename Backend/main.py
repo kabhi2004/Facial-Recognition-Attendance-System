@@ -32,7 +32,11 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost",
         "capacitor://localhost",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "http://192.168.1.103:5173",
+        "http://192.168.1.103:5174",
+        "http://192.168.1.103",
+        "capacitor://192.168.1.103"
     ],
     allow_credentials=True,
     allow_methods=["*"],
