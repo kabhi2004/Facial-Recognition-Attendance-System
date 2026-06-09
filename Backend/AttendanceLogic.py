@@ -15,6 +15,8 @@ class FaceRecognizer:
         self.reverse_mapping = {}  # string -> int
 
     def train(self):
+        self.label_mapping = {}
+        self.reverse_mapping = {}
         data = fetch_all_faces()  # [(person_type, person_id, face_vector)]
 
         X, y = [], []
