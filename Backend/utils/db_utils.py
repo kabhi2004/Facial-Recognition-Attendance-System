@@ -72,7 +72,11 @@ def fetch_all_faces():
             continue
 
         for sample in samples:
-            data.append((person_type, int(person_id), sample))
+            try:
+                pid = int(person_id)
+            except ValueError:
+                pid = person_id
+            data.append((person_type, pid, sample))
 
     return data
 

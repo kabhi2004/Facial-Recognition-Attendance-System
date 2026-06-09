@@ -75,7 +75,10 @@ def get_user_by_id(role: str, user_id: int):
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
 
-    cur.execute(f"SELECT * FROM {table} WHERE id=%s", (user_id,))
+    if role == "Student":
+        cur.execute(f"SELECT * FROM {table} WHERE roll_no=%s", (str(user_id),))
+    else:
+        cur.execute(f"SELECT * FROM {table} WHERE id=%s", (int(user_id),))
     rows = cur.fetchall()
 
     cur.close()

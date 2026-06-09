@@ -202,7 +202,7 @@ async def face_login(
     if recognized_role == "Student":
         response.update({
             "role": "Student",
-            "student_id": user_id,
+            "student_id": user["id"],
             "name": user["name"],
             "email": user["email"],
             "roll_no": user["roll_no"],
